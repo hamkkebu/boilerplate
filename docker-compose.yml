@@ -1,0 +1,52 @@
+version: "3"
+
+services:
+  database:
+    image: mysql
+    container_name: taste-sample-service-db
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_HOST=%
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - ./db/taste/sample/data:/var/lib/mysql
+    networks:
+      - taste-sample-service-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: taste-sample-service-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    restart: always
+    depends_on:
+      - database
+    links:
+      - database
+    networks:
+      - taste-sample-service-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: taste-sample-service-frontend
+    ports:
+      - "80:80"
+    restart: always
+    depends_on:
+      - backend
+    links:
+      - backend
+    networks:
+      - taste-sample-service-network
+
+networks:
+  taste-sample-service-network:
