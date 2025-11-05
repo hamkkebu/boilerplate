@@ -1,1 +1,1 @@
-# sample-service
+# boilerplate
