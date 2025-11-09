@@ -1,6 +1,6 @@
-package com.howwasit.taste.sampleservice.repository;
+package com.hamkkebu.boilerplate.repository;
 
-import com.howwasit.taste.sampleservice.data.entity.Sample;
+import com.hamkkebu.boilerplate.data.entity.Sample;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

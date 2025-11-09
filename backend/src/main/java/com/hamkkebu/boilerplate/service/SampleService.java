@@ -1,13 +1,13 @@
-package com.howwasit.taste.sampleservice.service;
+package com.hamkkebu.boilerplate.service;
 
 import java.util.List;
 
-import com.howwasit.taste.sampleservice.data.dto.RequestSample;
-import com.howwasit.taste.sampleservice.data.dto.ResponseSample;
-import com.howwasit.taste.sampleservice.data.entity.Sample;
-import com.howwasit.taste.sampleservice.data.event.SampleEvent;
-import com.howwasit.taste.sampleservice.data.mapper.SampleMapper;
-import com.howwasit.taste.sampleservice.repository.SampleJpaRepository;
+import com.hamkkebu.boilerplate.data.dto.RequestSample;
+import com.hamkkebu.boilerplate.data.dto.ResponseSample;
+import com.hamkkebu.boilerplate.data.entity.Sample;
+import com.hamkkebu.boilerplate.data.event.SampleEvent;
+import com.hamkkebu.boilerplate.data.mapper.SampleMapper;
+import com.hamkkebu.boilerplate.repository.SampleJpaRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

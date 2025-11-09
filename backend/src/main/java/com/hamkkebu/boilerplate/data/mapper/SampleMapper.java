@@ -1,8 +1,8 @@
-package com.howwasit.taste.sampleservice.data.mapper;
+package com.hamkkebu.boilerplate.data.mapper;
 
-import com.howwasit.taste.sampleservice.data.dto.RequestSample;
-import com.howwasit.taste.sampleservice.data.dto.ResponseSample;
-import com.howwasit.taste.sampleservice.data.entity.Sample;
+import com.hamkkebu.boilerplate.data.dto.RequestSample;
+import com.hamkkebu.boilerplate.data.dto.ResponseSample;
+import com.hamkkebu.boilerplate.data.entity.Sample;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 

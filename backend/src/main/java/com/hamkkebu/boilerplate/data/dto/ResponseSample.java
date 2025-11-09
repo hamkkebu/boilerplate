@@ -1,4 +1,4 @@
-package com.howwasit.taste.sampleservice.data.dto;
+package com.hamkkebu.boilerplate.data.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RequestSample {
+public class ResponseSample {
+
+    private Long sampleNum;
 
     private String sampleId;
 

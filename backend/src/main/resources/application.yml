@@ -17,4 +17,4 @@ spring:
 
 logging:
   level:
-    com.howwasit.taste.sampleservice: INFO
+    com.hamkkebu.boilerplate: INFO

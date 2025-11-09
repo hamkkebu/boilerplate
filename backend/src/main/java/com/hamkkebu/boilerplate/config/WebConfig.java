@@ -1,4 +1,4 @@
-package com.howwasit.taste.sampleservice.config;
+package com.hamkkebu.boilerplate.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;

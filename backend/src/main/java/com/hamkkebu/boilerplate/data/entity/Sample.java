@@ -1,4 +1,4 @@
-package com.howwasit.taste.sampleservice.data.entity;
+package com.hamkkebu.boilerplate.data.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

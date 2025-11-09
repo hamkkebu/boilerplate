@@ -1,4 +1,4 @@
-package com.howwasit.taste.sampleservice;
+package com.hamkkebu.taste.sampleservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

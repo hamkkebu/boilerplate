@@ -1,10 +1,11 @@
-package com.howwasit.taste.sampleservice.service;
+package com.hamkkebu.taste.sampleservice.service;
 
-import com.howwasit.taste.sampleservice.data.dto.RequestSample;
-import com.howwasit.taste.sampleservice.data.dto.ResponseSample;
-import com.howwasit.taste.sampleservice.data.entity.Sample;
-import com.howwasit.taste.sampleservice.data.mapper.SampleMapper;
-import com.howwasit.taste.sampleservice.repository.SampleJpaRepository;
+import com.hamkkebu.boilerplate.data.dto.RequestSample;
+import com.hamkkebu.boilerplate.data.dto.ResponseSample;
+import com.hamkkebu.boilerplate.data.entity.Sample;
+import com.hamkkebu.boilerplate.data.mapper.SampleMapper;
+import com.hamkkebu.boilerplate.repository.SampleJpaRepository;
+import com.hamkkebu.boilerplate.service.SampleService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

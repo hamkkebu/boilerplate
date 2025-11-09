@@ -1,4 +1,4 @@
-package com.howwasit.taste.sampleservice.data.event;
+package com.hamkkebu.boilerplate.data.event;
 
 import lombok.*;
 

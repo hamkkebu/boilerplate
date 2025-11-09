@@ -3,22 +3,22 @@ version: "3"
 services:
   database:
     image: mysql
-    container_name: taste-sample-service-db
+    container_name: hamkkebu-boilerplate-db
     ports:
       - "3306:3306"
     environment:
       - MYSQL_ROOT_HOST=%
       - MYSQL_ROOT_PASSWORD=root
     volumes:
-      - ./db/taste/sample/data:/var/lib/mysql
+      - ./db/hamkkebu/boilerplate/data:/var/lib/mysql
     networks:
-      - taste-sample-service-network
+      - hamkkebu-boilerplate-network
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: taste-sample-service-backend
+    container_name: hamkkebu-boilerplate-backend
     ports:
       - "8080:8080"
     environment:
@@ -31,13 +31,13 @@ services:
     links:
       - database
     networks:
-      - taste-sample-service-network
+      - hamkkebu-boilerplate-network
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: taste-sample-service-frontend
+    container_name: hamkkebu-boilerplate-frontend
     ports:
       - "80:80"
     restart: always
@@ -46,7 +46,7 @@ services:
     links:
       - backend
     networks:
-      - taste-sample-service-network
+      - hamkkebu-boilerplate-network
 
 networks:
-  taste-sample-service-network:
+  hamkkebu-boilerplate-network:

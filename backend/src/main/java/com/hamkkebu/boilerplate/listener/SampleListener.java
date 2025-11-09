@@ -1,6 +1,6 @@
-package com.howwasit.taste.sampleservice.listener;
+package com.hamkkebu.boilerplate.listener;
 
-import com.howwasit.taste.sampleservice.data.event.SampleEvent;
+import com.hamkkebu.boilerplate.data.event.SampleEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;

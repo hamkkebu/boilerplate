@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-alpine AS builder
+FROM amazoncorretto:17-alpine AS builder
 COPY gradlew .
 COPY gradle gradle
 COPY build.gradle .
@@ -7,7 +7,7 @@ COPY src src
 RUN chmod +x ./gradlew
 RUN ./gradlew bootJar
 
-FROM openjdk:17-jdk-alpine
+FROM amazoncorretto:17-alpine
 COPY --from=builder build/libs/*.jar app.jar
 
 EXPOSE 8080

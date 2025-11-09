@@ -1,9 +1,10 @@
-package com.howwasit.taste.sampleservice.controller;
+package com.hamkkebu.taste.sampleservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.howwasit.taste.sampleservice.data.dto.RequestSample;
-import com.howwasit.taste.sampleservice.data.dto.ResponseSample;
-import com.howwasit.taste.sampleservice.service.SampleService;
+import com.hamkkebu.boilerplate.controller.SampleController;
+import com.hamkkebu.boilerplate.data.dto.RequestSample;
+import com.hamkkebu.boilerplate.data.dto.ResponseSample;
+import com.hamkkebu.boilerplate.service.SampleService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

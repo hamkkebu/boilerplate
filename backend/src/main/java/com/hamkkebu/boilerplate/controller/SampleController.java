@@ -1,11 +1,11 @@
-package com.howwasit.taste.sampleservice.controller;
+package com.hamkkebu.boilerplate.controller;
 
-import com.howwasit.taste.sampleservice.data.dto.RequestSample;
-import com.howwasit.taste.sampleservice.data.dto.ResponseSample;
+import com.hamkkebu.boilerplate.data.dto.RequestSample;
+import com.hamkkebu.boilerplate.data.dto.ResponseSample;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import com.howwasit.taste.sampleservice.service.SampleService;
+import com.hamkkebu.boilerplate.service.SampleService;
 
 import java.util.List;
 
