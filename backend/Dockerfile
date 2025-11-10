@@ -4,8 +4,11 @@ COPY gradle gradle
 COPY build.gradle .
 COPY settings.gradle .
 COPY src src
+
+RUN sed -i 's/\r$//' gradlew
+
 RUN chmod +x ./gradlew
-RUN ./gradlew bootJar
+RUN ./gradlew bootJar --no-daemon
 
 FROM amazoncorretto:17-alpine
 COPY --from=builder build/libs/*.jar app.jar
