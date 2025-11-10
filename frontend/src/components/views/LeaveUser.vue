@@ -21,7 +21,7 @@ export default {
   },
   methods: {
     leaveSubmit() {
-      let url = process.env.VUE_APP_baseApiURL + '/account/delete/' + this.user_id
+      let url = process.env.VUE_APP_baseApiURL + '/sample/deactivate/' + this.user_id
       axios.delete(url).then(res => {
         console.log(res);
         this.$router.push('/userinfo')

@@ -8,4 +8,6 @@ import java.util.Optional;
 public interface SampleJpaRepository extends JpaRepository<Sample, Long> {
 
     Optional<Sample> findBySampleId(String sampleId);
+
+    void deleteBySampleId(String sampleId);
 }

@@ -8,20 +8,20 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "tbl_sample_taste")
+@Table(name = "tbl_boilerplate_sample")
 public class Sample {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "taste_sample_num", nullable = false)
+    @Column(name = "sample_num", nullable = false)
     private Long sampleNum;
 
-    @Column(name = "taste_sample_id", nullable = false)
+    @Column(name = "sample_id", nullable = false)
     private String sampleId;
 
-    @Column(name = "taste_sample_fname")
+    @Column(name = "sample_fname")
     private String sampleFname;
 
-    @Column(name = "taste_sample_lname")
+    @Column(name = "sample_lname")
     private String sampleLname;
 }

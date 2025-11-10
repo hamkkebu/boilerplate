@@ -1,16 +1,16 @@
-const taste_account_columns = [
-    'tasteAccountNum',
-    'tasteAccountId',
-    'tasteAccountFname',
-    'tasteAccountLname',
-    'tasteAccountNickname',
-    'tasteAccountCountry',
-    'tasteAccountCity',
-    'tasteAccountState',
-    'tasteAccountStreet1',
-    'tasteAccountStreet2',
-    'tasteAccountZip',
-    'tasteAccountEmail',
-    'tasteAccountPhone',
+const sample_columns = [
+    'sampleNum',
+    'sampleId',
+    'sampleFname',
+    'sampleLname',
+    'sampleNickname',
+    'sampleCountry',
+    'sampleCity',
+    'sampleState',
+    'sampleStreet1',
+    'sampleStreet2',
+    'sampleZip',
+    'sampleEmail',
+    'samplePhone',
 ]
-export default taste_account_columns;
+export default sample_columns;

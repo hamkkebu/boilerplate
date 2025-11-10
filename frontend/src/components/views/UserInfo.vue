@@ -8,8 +8,8 @@
         <div class="tbl detail_tbl">
           <table>
             <tbody>
-            <td v-for="key in taste_account_columns()" :key="key">
-              <th>{{ key.slice(5) }}</th>
+            <td v-for="key in sample_columns()" :key="key">
+              <th>{{ key.slice(6) }}</th>
               <tr v-for="item in result" :key="item">
                 {{ item[key] || "NULL"}}
               </tr>
@@ -28,7 +28,7 @@
 </template>
 
 <script>
-import taste_account_columns from "@/data";
+import sample_columns from "@/data";
 import * as XLSX from 'xlsx';
 
 export default {
@@ -38,16 +38,17 @@ export default {
     }
   },
   mounted() {
-    this.getUserInfo();
+    this.getUserInfoAll();
   },
   methods: {
-    taste_account_columns() {
-      return taste_account_columns
+    sample_columns() {
+      return sample_columns
     },
-    getUserInfo() {
-      let url = process.env.VUE_APP_baseApiURL + '/account/get/list'
+    getUserInfoAll() {
+      let url = process.env.VUE_APP_baseApiURL + '/sample/info/all'
       this.axios.get(url).then(res => {
         this.result = res.data
+        console.log(res.data)
       }).catch(err => {
         console.log(err);
       })

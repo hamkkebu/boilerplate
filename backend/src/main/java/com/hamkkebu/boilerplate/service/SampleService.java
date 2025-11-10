@@ -39,4 +39,9 @@ public class SampleService {
     public List<ResponseSample> getAllSampleInfo() {
         return repository.findAll().stream().map(mapper::toDto).toList();
     }
+
+    @Transactional
+    public void deleteSample(String sampleId) {
+        repository.deleteBySampleId(sampleId);
+    }
 }

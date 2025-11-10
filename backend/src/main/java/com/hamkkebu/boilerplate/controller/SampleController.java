@@ -9,7 +9,7 @@ import com.hamkkebu.boilerplate.service.SampleService;
 
 import java.util.List;
 
-@RequestMapping("/taste/sample")
+@RequestMapping("/boilerplate/sample")
 @RequiredArgsConstructor
 @RestController
 public class SampleController {
@@ -29,6 +29,11 @@ public class SampleController {
     @GetMapping("/info/all")
     public @ResponseBody List<ResponseSample> getAllSampleInfo() {
         return service.getAllSampleInfo();
+    }
+
+    @DeleteMapping("/deactivate/{sampleId}")
+    public @ResponseBody void deleteSample(@PathVariable String sampleId) {
+        service.deleteSample(sampleId);
     }
 
 }
