@@ -98,14 +98,14 @@ export default {
       }
     },
     leaveSubmit() {
-      let url = process.env.VUE_APP_baseApiURL + '/sample/deactivate/' + this.user_id
+      let url = process.env.VUE_APP_baseApiURL + '/api/v1/samples/' + this.user_id
       axios.delete(url).then(res => {
         console.log(res);
         alert('회원탈퇴가 완료되었습니다.');
         this.$router.push('/userinfo')
       }).catch(err => {
         console.log(err);
-        alert('탈퇴 처리 중 오류가 발생했습니다.');
+        // 에러 메시지는 axios 인터셉터에서 자동으로 표시됩니다
       })
     },
     goBack() {

@@ -96,10 +96,19 @@
       </div>
 
       <div class="navigation-buttons">
-        <button @click="goToSignup" class="btn-secondary">
-          <span>회원가입</span>
+        <button @click="goToLogout" class="btn-secondary">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>로그아웃</span>
         </button>
         <button @click="goToLeave" class="btn-danger">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
           <span>회원탈퇴</span>
         </button>
       </div>
@@ -125,9 +134,10 @@ export default {
       return sample_columns
     },
     getUserInfoAll() {
-      let url = process.env.VUE_APP_baseApiURL + '/sample/info/all'
+      let url = process.env.VUE_APP_baseApiURL + '/api/v1/samples'
       this.axios.get(url).then(res => {
-        this.result = res.data
+        // ApiResponse<List<ResponseSample>> 형식이므로 res.data.data로 접근
+        this.result = res.data.data || res.data
         console.log(res.data)
       }).catch(err => {
         console.log(err);
@@ -140,8 +150,8 @@ export default {
       var filename = "account_info_" + new Date().toJSON() + ".xlsx";
       XLSX.writeFile(wb, filename);
     },
-    goToSignup() {
-      this.$router.push('/signup');
+    goToLogout() {
+      this.$router.push('/login');
     },
     goToLeave() {
       this.$router.push('/leaveuser');
@@ -154,8 +164,11 @@ export default {
 <style scoped>
 .userinfo-container {
   min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 40px 20px;
+  padding: 60px 20px;
 }
 
 .userinfo-card {
@@ -163,7 +176,8 @@ export default {
   border-radius: 20px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   padding: 48px 40px;
-  max-width: 1200px;
+  width: 100%;
+  max-width: 1600px;
   margin: 0 auto;
   animation: slideUp 0.5s ease-out;
 }
@@ -420,6 +434,10 @@ export default {
 .btn-secondary,
 .btn-danger {
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 14px;
   border: none;
   border-radius: 12px;
@@ -427,6 +445,12 @@ export default {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+}
+
+.btn-secondary svg,
+.btn-danger svg {
+  width: 18px;
+  height: 18px;
 }
 
 .btn-secondary {

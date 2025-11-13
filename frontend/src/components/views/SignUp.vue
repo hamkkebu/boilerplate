@@ -218,13 +218,15 @@ export default {
       return sample_columns.slice(1)
     },
     signUpSubmit() {
-      let url = process.env.VUE_APP_baseApiURL + '/sample/signup'
+      let url = process.env.VUE_APP_baseApiURL + '/api/v1/samples'
 
       this.axios.post(url, JSON.stringify(this.dict_columns)).then(res => {
         console.log(res);
+        alert('회원가입이 완료되었습니다!');
         this.$router.push('/userinfo')
       }).catch(err => {
         console.log(err);
+        // 에러 메시지는 axios 인터셉터에서 자동으로 표시됩니다
       })
     },
     goToLogin() {
