@@ -5,8 +5,6 @@ COPY build.gradle .
 COPY settings.gradle .
 COPY src src
 
-RUN sed -i 's/\r$//' gradlew
-
 RUN chmod +x ./gradlew
 RUN ./gradlew bootJar --no-daemon
 
@@ -14,4 +12,5 @@ FROM amazoncorretto:17-alpine
 COPY --from=builder build/libs/*.jar app.jar
 
 EXPOSE 8080
+
 ENTRYPOINT ["java", "-jar", "/app.jar"]
