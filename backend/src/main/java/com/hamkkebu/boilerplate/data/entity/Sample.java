@@ -1,15 +1,22 @@
 package com.hamkkebu.boilerplate.data.entity;
 
+import com.hamkkebu.boilerplate.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Sample 엔티티
+ *
+ * <p>사용자(회원) 정보를 저장하는 엔티티입니다.</p>
+ * <p>BaseEntity를 상속받아 생성/수정 일시 및 Soft Delete 기능을 지원합니다.</p>
+ */
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "tbl_boilerplate_sample")
-public class Sample {
+public class Sample extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

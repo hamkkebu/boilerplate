@@ -90,18 +90,18 @@ public class SampleService {
     }
 
     /**
-     * Sample 전체 조회
+     * Sample 전체 조회 (삭제되지 않은 데이터만)
      *
      * @return Sample 목록
      */
     public List<ResponseSample> getAllSampleInfo() {
-        return repository.findAll().stream()
+        return repository.findByDeletedFalse().stream()
             .map(mapper::toDto)
             .toList();
     }
 
     /**
-     * Sample 전체 조회 (페이징)
+     * Sample 전체 조회 (페이징, 삭제되지 않은 데이터만)
      *
      * @param pageRequest 페이징 요청
      * @return 페이징된 Sample 목록
@@ -110,31 +110,37 @@ public class SampleService {
         // Pageable 생성 (기본 정렬: sampleNum 내림차순)
         Pageable pageable = pageRequest.toPageable("sampleNum");
 
-        // 페이징 조회
-        Page<Sample> page = repository.findAll(pageable);
+        // 페이징 조회 (삭제되지 않은 데이터만)
+        Page<Sample> page = repository.findByDeletedFalse(pageable);
 
         // Entity -> DTO 변환 + PageResponseDto 생성
         return PageResponseDto.of(page, mapper::toDto);
     }
 
     /**
-     * Sample 삭제
+     * Sample 삭제 (Soft Delete)
+     *
+     * <p>물리적 삭제 대신 논리적 삭제를 수행합니다.</p>
+     * <p>BaseEntity의 delete() 메서드를 호출하여 deleted 플래그를 true로 설정합니다.</p>
      *
      * @param sampleId Sample ID
      * @throws BusinessException Sample을 찾을 수 없는 경우
      */
     @Transactional
     public void deleteSample(String sampleId) {
-        // 존재 여부 확인
-        if (!repository.findBySampleId(sampleId).isPresent()) {
-            throw new BusinessException(
+        // Sample 조회
+        Sample sample = repository.findBySampleId(sampleId)
+            .orElseThrow(() -> new BusinessException(
                 ErrorCode.RESOURCE_NOT_FOUND,
                 "삭제할 Sample을 찾을 수 없습니다: sampleId=" + sampleId
-            );
-        }
+            ));
 
-        repository.deleteBySampleId(sampleId);
+        // Soft Delete 수행
+        sample.delete();
 
-        log.info("Sample deleted: sampleId={}", sampleId);
+        // 명시적으로 저장 (변경 감지로 자동 저장되지만, 명확성을 위해)
+        repository.save(sample);
+
+        log.info("Sample soft deleted: sampleId={}, deletedAt={}", sampleId, sample.getDeletedAt());
     }
 }
