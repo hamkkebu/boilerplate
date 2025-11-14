@@ -116,49 +116,65 @@
   </div>
 </template>
 
-<script>
-import sample_columns from "@/data";
+<script lang="ts">
+import { defineComponent, ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import * as XLSX from 'xlsx';
+import apiClient from '@/api/client';
+import { useApi } from '@/composables/useApi';
+import { API_ENDPOINTS, ROUTES } from '@/constants';
+import { formatDate } from '@/utils/date.utils';
+import type { Sample } from '@/types/domain.types';
 
-export default {
-  data () {
-    return {
-      result: [],
-    }
-  },
-  mounted() {
-    this.getUserInfoAll();
-  },
-  methods: {
-    sample_columns() {
-      return sample_columns
-    },
-    getUserInfoAll() {
-      let url = process.env.VUE_APP_baseApiURL + '/api/v1/samples'
-      this.axios.get(url).then(res => {
-        // ApiResponse<List<ResponseSample>> 형식이므로 res.data.data로 접근
-        this.result = res.data.data || res.data
-        console.log(res.data)
-      }).catch(err => {
-        console.log(err);
-      })
-    },
-    downloadExcel() {
-      const dataWS = XLSX.utils.json_to_sheet(this.result);
+export default defineComponent({
+  name: 'UserInfo',
+  setup() {
+    const router = useRouter();
+    const { loading, execute } = useApi<Sample[]>();
+    const result = ref<Sample[]>([]);
+
+    const getUserInfoAll = async () => {
+      const data = await execute(() => apiClient.get(API_ENDPOINTS.SAMPLES));
+      if (data) {
+        result.value = data;
+      }
+    };
+
+    const downloadExcel = () => {
+      if (result.value.length === 0) {
+        alert('다운로드할 데이터가 없습니다.');
+        return;
+      }
+
+      const dataWS = XLSX.utils.json_to_sheet(result.value);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, dataWS, 'Sheet1');
-      var filename = "account_info_" + new Date().toJSON() + ".xlsx";
+      const filename = `account_info_${formatDate(new Date().toISOString(), 'YYYYMMDD_HHmmss')}.xlsx`;
       XLSX.writeFile(wb, filename);
-    },
-    goToLogout() {
-      this.$router.push('/login');
-    },
-    goToLeave() {
-      this.$router.push('/leaveuser');
-    }
-  }
-}
+    };
 
+    const goToLogout = () => {
+      router.push(ROUTES.LOGIN);
+    };
+
+    const goToLeave = () => {
+      router.push(ROUTES.LEAVE_USER);
+    };
+
+    onMounted(() => {
+      getUserInfoAll();
+    });
+
+    return {
+      result,
+      loading,
+      getUserInfoAll,
+      downloadExcel,
+      goToLogout,
+      goToLeave,
+    };
+  },
+});
 </script>
 
 <style scoped>

@@ -35,4 +35,49 @@ public class ResponseSample {
      * Last Name
      */
     private String sampleLname;
+
+    /**
+     * Nickname
+     */
+    private String sampleNickname;
+
+    /**
+     * Email
+     */
+    private String sampleEmail;
+
+    /**
+     * Phone
+     */
+    private String samplePhone;
+
+    /**
+     * Country
+     */
+    private String sampleCountry;
+
+    /**
+     * City
+     */
+    private String sampleCity;
+
+    /**
+     * State
+     */
+    private String sampleState;
+
+    /**
+     * Street 1
+     */
+    private String sampleStreet1;
+
+    /**
+     * Street 2
+     */
+    private String sampleStreet2;
+
+    /**
+     * Zip Code
+     */
+    private String sampleZip;
 }

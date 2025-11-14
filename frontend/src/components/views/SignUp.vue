@@ -201,39 +201,59 @@
   </div>
 </template>
 
-<script>
-import sample_columns from '@/data.js'
+<script lang="ts">
+import { defineComponent, reactive } from 'vue';
+import { useRouter } from 'vue-router';
+import apiClient from '@/api/client';
+import { useApi } from '@/composables/useApi';
+import { API_ENDPOINTS, ROUTES, SUCCESS_MESSAGES } from '@/constants';
+import type { CreateSampleRequest, Sample } from '@/types/domain.types';
 
-export default {
-  data () {
+export default defineComponent({
+  name: 'SignUp',
+  setup() {
+    const router = useRouter();
+    const { loading, execute } = useApi<Sample>();
+
+    const formData = reactive<CreateSampleRequest>({
+      sampleId: '',
+      sampleFname: '',
+      sampleLname: '',
+      sampleNickname: '',
+      sampleEmail: '',
+      samplePhone: '',
+      sampleCountry: '',
+      sampleCity: '',
+      sampleState: '',
+      sampleStreet1: '',
+      sampleStreet2: '',
+      sampleZip: '',
+    });
+
+    const signUpSubmit = async () => {
+      const result = await execute(
+        () => apiClient.post(API_ENDPOINTS.SAMPLES, formData),
+        {
+          onSuccess: () => {
+            alert(SUCCESS_MESSAGES.SIGNUP_SUCCESS);
+            router.push(ROUTES.LOGIN);
+          },
+        }
+      );
+    };
+
+    const goToLogin = () => {
+      router.push(ROUTES.LOGIN);
+    };
+
     return {
-      dict_columns: sample_columns.reduce(function(obj, x) {
-        obj[x] = '';
-        return obj;
-      }, {}),
-    }
+      dict_columns: formData,
+      loading,
+      signUpSubmit,
+      goToLogin,
+    };
   },
-  methods: {
-    sample_columns() {
-      return sample_columns.slice(1)
-    },
-    signUpSubmit() {
-      let url = process.env.VUE_APP_baseApiURL + '/api/v1/samples'
-
-      this.axios.post(url, JSON.stringify(this.dict_columns)).then(res => {
-        console.log(res);
-        alert('회원가입이 완료되었습니다!');
-        this.$router.push('/userinfo')
-      }).catch(err => {
-        console.log(err);
-        // 에러 메시지는 axios 인터셉터에서 자동으로 표시됩니다
-      })
-    },
-    goToLogin() {
-      this.$router.push('/login');
-    }
-  }
-}
+});
 </script>
 
 <style scoped>

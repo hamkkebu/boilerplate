@@ -71,48 +71,70 @@
   </div>
 </template>
 
-<script>
-import axios from "axios";
+<script lang="ts">
+import { defineComponent, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import apiClient from '@/api/client';
+import { useApi } from '@/composables/useApi';
+import { API_ENDPOINTS, ROUTES, SUCCESS_MESSAGES } from '@/constants';
 
-export default {
-  data() {
-    return {
-      user_id: '',
-      confirmed: false
-    }
-  },
-  methods: {
-    confirmAndLeave() {
-      if (!this.confirmed) {
+export default defineComponent({
+  name: 'LeaveUser',
+  setup() {
+    const router = useRouter();
+    const { loading, execute } = useApi();
+
+    const user_id = ref('');
+    const confirmed = ref(false);
+
+    const confirmAndLeave = () => {
+      if (!confirmed.value) {
         alert('탈퇴 동의에 체크해주세요.');
         return;
       }
 
-      if (!this.user_id) {
+      if (!user_id.value) {
         alert('아이디를 입력해주세요.');
         return;
       }
 
-      if (confirm(`정말로 "${this.user_id}" 계정을 탈퇴하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
-        this.leaveSubmit();
+      if (
+        confirm(
+          `정말로 "${user_id.value}" 계정을 탈퇴하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
+        )
+      ) {
+        leaveSubmit();
       }
-    },
-    leaveSubmit() {
-      let url = process.env.VUE_APP_baseApiURL + '/api/v1/samples/' + this.user_id
-      axios.delete(url).then(res => {
-        console.log(res);
-        alert('회원탈퇴가 완료되었습니다.');
-        this.$router.push('/userinfo')
-      }).catch(err => {
-        console.log(err);
-        // 에러 메시지는 axios 인터셉터에서 자동으로 표시됩니다
-      })
-    },
-    goBack() {
-      this.$router.push('/userinfo');
-    }
-  }
-}
+    };
+
+    const leaveSubmit = async () => {
+      await execute(
+        () => apiClient.delete(API_ENDPOINTS.SAMPLE_BY_ID(user_id.value)),
+        {
+          onSuccess: () => {
+            alert('회원 탈퇴가 완료되었습니다.');
+            router.push(ROUTES.USER_INFO);
+          },
+          onError: (error) => {
+            alert(`회원 탈퇴 중 오류가 발생했습니다: ${error}`);
+          },
+        }
+      );
+    };
+
+    const goBack = () => {
+      router.push(ROUTES.USER_INFO);
+    };
+
+    return {
+      user_id,
+      confirmed,
+      loading,
+      confirmAndLeave,
+      goBack,
+    };
+  },
+});
 </script>
 
 <style scoped>
