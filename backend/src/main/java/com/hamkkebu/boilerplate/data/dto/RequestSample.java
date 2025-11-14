@@ -49,6 +49,14 @@ public class RequestSample {
     )
     private String samplePhone;
 
+    @NotBlank(message = "비밀번호는 필수입니다")
+    @Size(min = 8, max = 100, message = "비밀번호는 8자 이상 100자 이하여야 합니다")
+    @Pattern(
+        regexp = "^(?=.*[a-zA-Z])(?=.*\\d).+$",
+        message = "비밀번호는 영문자와 숫자를 포함해야 합니다"
+    )
+    private String samplePassword;
+
     // 선택 필드들 (validation 없음)
     private String sampleNickname;
     private String sampleCountry;

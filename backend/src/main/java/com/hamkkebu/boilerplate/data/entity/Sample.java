@@ -41,6 +41,9 @@ public class Sample extends BaseEntity {
     @Column(name = "sample_phone")
     private String samplePhone;
 
+    @Column(name = "sample_password", nullable = false)
+    private String samplePassword;
+
     @Column(name = "sample_country")
     private String sampleCountry;
 

@@ -13,6 +13,7 @@ CREATE TABLE tbl_boilerplate_sample (
     sample_nickname VARCHAR(50),
     sample_email VARCHAR(100),
     sample_phone VARCHAR(20),
+    sample_password VARCHAR(255) NOT NULL,
     sample_country VARCHAR(50),
     sample_city VARCHAR(50),
     sample_state VARCHAR(50),

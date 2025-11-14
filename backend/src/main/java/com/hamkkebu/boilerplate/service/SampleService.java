@@ -39,6 +39,7 @@ public class SampleService {
     private final SampleMapper mapper;
     private final SampleJpaRepository repository;
     private final ApplicationEventPublisher publisher;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     /**
      * Sample 생성
@@ -57,7 +58,27 @@ public class SampleService {
             );
         }
 
+        // DTO -> Entity 변환
         Sample entity = mapper.toEntity(requestDto);
+
+        // 비밀번호 암호화
+        String encodedPassword = passwordEncoder.encode(requestDto.getSamplePassword());
+        entity = Sample.builder()
+            .sampleId(entity.getSampleId())
+            .sampleFname(entity.getSampleFname())
+            .sampleLname(entity.getSampleLname())
+            .sampleNickname(entity.getSampleNickname())
+            .sampleEmail(entity.getSampleEmail())
+            .samplePhone(entity.getSamplePhone())
+            .samplePassword(encodedPassword)  // 암호화된 비밀번호 설정
+            .sampleCountry(entity.getSampleCountry())
+            .sampleCity(entity.getSampleCity())
+            .sampleState(entity.getSampleState())
+            .sampleStreet1(entity.getSampleStreet1())
+            .sampleStreet2(entity.getSampleStreet2())
+            .sampleZip(entity.getSampleZip())
+            .build();
+
         repository.save(entity);
 
         // 이벤트 발행
