@@ -2,6 +2,8 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.1.2'
 	id 'io.spring.dependency-management' version '1.1.2'
+	id 'org.asciidoctor.jvm.convert' version '3.3.2'
+	id 'com.epages.restdocs-api-spec' version '0.19.2'
 }
 
 group = 'com.hamkkebu.boilerplate'
@@ -13,6 +15,14 @@ java {
 
 repositories {
 	mavenCentral()
+}
+
+configurations {
+	asciidoctorExt
+}
+
+ext {
+	snippetsDir = file('build/generated-snippets')
 }
 
 dependencies {
@@ -30,6 +40,9 @@ dependencies {
 	// Kafka
 	implementation 'org.springframework.kafka:spring-kafka'
 
+	// Swagger UI (OpenAPI 3.0)
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+
 	runtimeOnly 'com.mysql:mysql-connector-j'
 
 	compileOnly 'org.projectlombok:lombok'
@@ -43,10 +56,59 @@ dependencies {
 	testImplementation 'org.springframework.kafka:spring-kafka-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 
+	// REST Docs
+	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+	asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+
+	// REST Docs -> OpenAPI 3.0 변환
+	testImplementation 'com.epages:restdocs-api-spec-mockmvc:0.19.2'
+
+	// TestContainers
+	testImplementation 'org.testcontainers:testcontainers:1.19.0'
+	testImplementation 'org.testcontainers:mysql:1.19.0'
+	testImplementation 'org.testcontainers:kafka:1.19.0'
+	testImplementation 'org.testcontainers:junit-jupiter:1.19.0'
+
 	testCompileOnly 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+	outputs.dir snippetsDir
+}
+
+// Asciidoctor 태스크
+asciidoctor {
+	inputs.dir snippetsDir
+	configurations 'asciidoctorExt'
+	dependsOn test
+}
+
+// OpenAPI 3.0 spec 설정 (restdocs-api-spec 플러그인)
+openapi3 {
+	setServer('https://api.hamkkebu.com')
+	setTitle('Hamkkebu Boilerplate API')
+	setDescription('Hamkkebu Boilerplate REST API 문서')
+	setVersion('1.0.0')
+	format = 'yaml'
+	outputDirectory = 'build/api-spec'
+}
+
+// OpenAPI spec을 static 리소스로 복사 (선택적 - 테스트에서 생성된 스펙 저장용)
+tasks.register('copyOpenApiSpec', Copy) {
+	dependsOn 'openapi3'
+	from "build/api-spec/openapi3.yaml"
+	into "src/main/resources/static/docs"
+	doLast {
+		println "OpenAPI 3.0 spec copied to: src/main/resources/static/docs/openapi3.yaml"
+	}
+}
+
+// bootJar에 문서 포함
+bootJar {
+	dependsOn asciidoctor
+	from("${asciidoctor.outputDir}") {
+		into 'static/docs'
+	}
 }

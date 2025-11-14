@@ -43,3 +43,14 @@ logging:
     com.hamkkebu.boilerplate: INFO
     org.apache.kafka: WARN
     org.springframework.kafka: WARN
+
+# Swagger UI 설정
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+    display-request-duration: true
+    disable-swagger-default-url: true

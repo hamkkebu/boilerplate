@@ -61,7 +61,13 @@ public class SecurityConfig {
                                 "/api/v1/auth/**",
                                 "/api/v1/samples/**",
                                 "/actuator/**",
-                                "/h2-console/**"
+                                "/h2-console/**",
+                                // Swagger UI
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/webjars/**"
                         ).permitAll()
 
                         // 그 외 모든 요청은 인증 필요
