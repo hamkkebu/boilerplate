@@ -9,6 +9,8 @@ export const API_ENDPOINTS = {
   // Sample (User) 관련
   SAMPLES: '/api/v1/samples',
   SAMPLE_BY_ID: (id: string) => `/api/v1/samples/${id}`,
+  SAMPLE_CHECK_DUPLICATE: (id: string) => `/api/v1/samples/check/${id}`,
+  SAMPLE_CHECK_NICKNAME_DUPLICATE: (nickname: string) => `/api/v1/samples/check/nickname/${nickname}`,
   SAMPLES_PAGE: '/api/v1/samples/page',
 
   // 인증 관련

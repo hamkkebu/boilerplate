@@ -42,6 +42,26 @@ public class SampleService {
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     /**
+     * Sample ID 중복 확인
+     *
+     * @param sampleId 확인할 Sample ID
+     * @return 중복이면 true, 아니면 false
+     */
+    public boolean checkSampleIdDuplicate(String sampleId) {
+        return repository.findBySampleId(sampleId).isPresent();
+    }
+
+    /**
+     * Sample 닉네임 중복 확인
+     *
+     * @param sampleNickname 확인할 Sample 닉네임
+     * @return 중복이면 true, 아니면 false
+     */
+    public boolean checkSampleNicknameDuplicate(String sampleNickname) {
+        return repository.findBySampleNicknameAndDeletedFalse(sampleNickname).isPresent();
+    }
+
+    /**
      * Sample 생성
      *
      * @param requestDto Sample 생성 요청

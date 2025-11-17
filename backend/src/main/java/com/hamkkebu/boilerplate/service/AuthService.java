@@ -53,7 +53,7 @@ public class AuthService {
                 log.warn("User not found: {}", request.getSampleId());
                 return new BusinessException(
                     ErrorCode.RESOURCE_NOT_FOUND,
-                    "사용자를 찾을 수 없습니다: " + request.getSampleId()
+                    "사용자를 찾을 수 없습니다"
                 );
             });
 

@@ -26,6 +26,14 @@ public interface SampleJpaRepository extends JpaRepository<Sample, Long> {
     Optional<Sample> findBySampleIdAndDeletedFalse(String sampleId);
 
     /**
+     * Sample 닉네임으로 Sample 조회 (삭제되지 않은 데이터만)
+     *
+     * @param sampleNickname Sample 닉네임
+     * @return Sample 엔티티 (Optional)
+     */
+    Optional<Sample> findBySampleNicknameAndDeletedFalse(String sampleNickname);
+
+    /**
      * 모든 Sample 조회 (삭제되지 않은 데이터만)
      *
      * @return Sample 리스트

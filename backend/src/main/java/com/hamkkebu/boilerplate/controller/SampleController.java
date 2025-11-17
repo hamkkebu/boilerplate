@@ -48,6 +48,32 @@ public class SampleController {
     }
 
     /**
+     * Sample ID 중복 확인
+     * GET /api/v1/samples/check/{sampleId}
+     */
+    @GetMapping("/check/{sampleId}")
+    public ApiResponse<Boolean> checkSampleIdDuplicate(@PathVariable String sampleId) {
+        log.info("Checking sample ID duplicate: sampleId={}", sampleId);
+
+        boolean isDuplicate = service.checkSampleIdDuplicate(sampleId);
+
+        return ApiResponse.success(isDuplicate, isDuplicate ? "사용 중인 아이디입니다" : "사용 가능한 아이디입니다");
+    }
+
+    /**
+     * Sample 닉네임 중복 확인
+     * GET /api/v1/samples/check/nickname/{nickname}
+     */
+    @GetMapping("/check/nickname/{nickname}")
+    public ApiResponse<Boolean> checkSampleNicknameDuplicate(@PathVariable String nickname) {
+        log.info("Checking sample nickname duplicate: nickname={}", nickname);
+
+        boolean isDuplicate = service.checkSampleNicknameDuplicate(nickname);
+
+        return ApiResponse.success(isDuplicate, isDuplicate ? "사용 중인 닉네임입니다" : "사용 가능한 닉네임입니다");
+    }
+
+    /**
      * Sample 단건 조회
      * GET /api/v1/samples/{sampleId}
      */

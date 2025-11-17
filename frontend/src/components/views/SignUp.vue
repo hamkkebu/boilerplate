@@ -21,12 +21,16 @@
               <input
                 id="sampleId"
                 type="text"
-                class="input-field"
+                :class="['input-field', { 'error': idChecked && idDuplicate, 'success': idChecked && !idDuplicate }]"
                 placeholder="사용할 아이디를 입력하세요"
                 v-model="dict_columns.sampleId"
+                @blur="checkIdDuplicate"
+                @input="resetIdCheck"
                 required
               />
             </div>
+            <p v-if="idChecked && idDuplicate" class="error-message">이미 사용 중인 아이디입니다</p>
+            <p v-if="idChecked && !idDuplicate" class="success-message">사용 가능한 아이디입니다</p>
           </div>
 
           <div class="input-row">
@@ -66,12 +70,16 @@
               <input
                 id="sampleNickname"
                 type="text"
-                class="input-field"
+                :class="['input-field', { 'error': nicknameChecked && nicknameDuplicate, 'success': nicknameChecked && !nicknameDuplicate }]"
                 placeholder="닉네임을 입력하세요"
                 v-model="dict_columns.sampleNickname"
+                @blur="checkNicknameDuplicate"
+                @input="resetNicknameCheck"
                 required
               />
             </div>
+            <p v-if="nicknameChecked && nicknameDuplicate" class="error-message">이미 사용 중인 닉네임입니다</p>
+            <p v-if="nicknameChecked && !nicknameDuplicate" class="success-message">사용 가능한 닉네임입니다</p>
           </div>
 
           <div class="input-group">
@@ -257,6 +265,10 @@ export default defineComponent({
     const router = useRouter();
     const { loading, execute } = useApi<Sample>();
     const passwordConfirm = ref('');
+    const idChecked = ref(false);
+    const idDuplicate = ref(false);
+    const nicknameChecked = ref(false);
+    const nicknameDuplicate = ref(false);
 
     const formData = reactive<CreateSampleRequest>({
       sampleId: '',
@@ -274,7 +286,81 @@ export default defineComponent({
       sampleZip: '',
     });
 
+    // 아이디 중복 확인
+    const checkIdDuplicate = async () => {
+      if (!formData.sampleId || formData.sampleId.trim().length < 3) {
+        idChecked.value = false;
+        return;
+      }
+
+      try {
+        const response = await apiClient.get(
+          API_ENDPOINTS.SAMPLE_CHECK_DUPLICATE(formData.sampleId)
+        );
+        idDuplicate.value = response.data.data;
+        idChecked.value = true;
+      } catch (error) {
+        console.error('아이디 중복 확인 중 오류 발생:', error);
+        idChecked.value = false;
+      }
+    };
+
+    // 아이디 입력 시 중복 확인 상태 초기화
+    const resetIdCheck = () => {
+      idChecked.value = false;
+      idDuplicate.value = false;
+    };
+
+    // 닉네임 중복 확인
+    const checkNicknameDuplicate = async () => {
+      if (!formData.sampleNickname || formData.sampleNickname.trim().length < 2) {
+        nicknameChecked.value = false;
+        return;
+      }
+
+      try {
+        const response = await apiClient.get(
+          API_ENDPOINTS.SAMPLE_CHECK_NICKNAME_DUPLICATE(formData.sampleNickname)
+        );
+        nicknameDuplicate.value = response.data.data;
+        nicknameChecked.value = true;
+      } catch (error) {
+        console.error('닉네임 중복 확인 중 오류 발생:', error);
+        nicknameChecked.value = false;
+      }
+    };
+
+    // 닉네임 입력 시 중복 확인 상태 초기화
+    const resetNicknameCheck = () => {
+      nicknameChecked.value = false;
+      nicknameDuplicate.value = false;
+    };
+
     const signUpSubmit = async () => {
+      // 아이디 중복 확인 여부 체크
+      if (!idChecked.value) {
+        alert('아이디 중복 확인이 필요합니다.');
+        return;
+      }
+
+      // 아이디 중복 확인
+      if (idDuplicate.value) {
+        alert('이미 사용 중인 아이디입니다. 다른 아이디를 입력해주세요.');
+        return;
+      }
+
+      // 닉네임 중복 확인 여부 체크
+      if (!nicknameChecked.value) {
+        alert('닉네임 중복 확인이 필요합니다.');
+        return;
+      }
+
+      // 닉네임 중복 확인
+      if (nicknameDuplicate.value) {
+        alert('이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.');
+        return;
+      }
+
       // 비밀번호 확인 검증
       if (formData.samplePassword !== passwordConfirm.value) {
         alert('비밀번호가 일치하지 않습니다.');
@@ -306,7 +392,15 @@ export default defineComponent({
     return {
       dict_columns: formData,
       passwordConfirm,
+      idChecked,
+      idDuplicate,
+      nicknameChecked,
+      nicknameDuplicate,
       loading,
+      checkIdDuplicate,
+      resetIdCheck,
+      checkNicknameDuplicate,
+      resetNicknameCheck,
       signUpSubmit,
       goToLogin,
     };
@@ -463,6 +557,16 @@ export default defineComponent({
   box-shadow: 0 0 0 3px rgba(245, 101, 101, 0.1);
 }
 
+.input-field.success {
+  border-color: #48bb78;
+  background-color: #f0fff4;
+}
+
+.input-field.success:focus {
+  border-color: #48bb78;
+  box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.1);
+}
+
 .input-hint {
   font-size: 12px;
   color: #718096;
@@ -472,6 +576,13 @@ export default defineComponent({
 .error-message {
   font-size: 12px;
   color: #f56565;
+  margin: 4px 0 0 0;
+  font-weight: 500;
+}
+
+.success-message {
+  font-size: 12px;
+  color: #48bb78;
   margin: 4px 0 0 0;
   font-weight: 500;
 }
