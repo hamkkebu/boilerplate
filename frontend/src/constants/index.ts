@@ -11,12 +11,13 @@ export const API_ENDPOINTS = {
   SAMPLE_BY_ID: (id: string) => `/api/v1/samples/${id}`,
   SAMPLES_PAGE: '/api/v1/samples/page',
 
-  // 향후 추가될 엔드포인트들
-  // AUTH: {
-  //   LOGIN: '/api/v1/auth/login',
-  //   LOGOUT: '/api/v1/auth/logout',
-  //   REFRESH: '/api/v1/auth/refresh',
-  // },
+  // 인증 관련
+  AUTH: {
+    LOGIN: '/api/v1/auth/login',
+    REFRESH: '/api/v1/auth/refresh',
+    VALIDATE: '/api/v1/auth/validate',
+    ME: '/api/v1/auth/me',
+  },
 } as const;
 
 /**

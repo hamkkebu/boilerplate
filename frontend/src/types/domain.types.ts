@@ -55,7 +55,18 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface TokenResponse {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
+}
+
 export interface LoginResponse {
-  user: AuthUser;
-  token?: string;
+  sampleId: string;
+  sampleFname: string;
+  sampleLname: string;
+  sampleNickname?: string;
+  sampleEmail?: string;
+  token: TokenResponse;
 }

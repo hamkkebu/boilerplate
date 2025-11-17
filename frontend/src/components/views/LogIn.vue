@@ -63,14 +63,14 @@ import { useAuth } from '@/composables/useAuth';
 import apiClient from '@/api/client';
 import { useApi } from '@/composables/useApi';
 import { API_ENDPOINTS, ROUTES } from '@/constants';
-import type { Sample } from '@/types/domain.types';
+import type { LoginResponse } from '@/types/domain.types';
 
 export default defineComponent({
   name: 'LogIn',
   setup() {
     const router = useRouter();
     const { login } = useAuth();
-    const { loading, execute } = useApi<Sample>();
+    const { loading, execute } = useApi<LoginResponse>();
 
     const user_id = ref('');
     const user_pw = ref('');
@@ -81,20 +81,30 @@ export default defineComponent({
         return;
       }
 
-      // 실제 로그인 API가 있다면 여기서 호출
-      // 현재는 사용자 정보를 조회하고 로그인 처리
+      if (!user_pw.value) {
+        alert('비밀번호를 입력해주세요.');
+        return;
+      }
+
+      // 로그인 API 호출 (비밀번호 검증 포함)
       const data = await execute(() =>
-        apiClient.get(API_ENDPOINTS.SAMPLE_BY_ID(user_id.value))
+        apiClient.post(API_ENDPOINTS.AUTH.LOGIN, {
+          sampleId: user_id.value,
+          password: user_pw.value,
+        })
       );
 
       if (data) {
-        // 인증 정보 저장
-        login({
-          sampleId: data.sampleId,
-          sampleFname: data.sampleFname,
-          sampleLname: data.sampleLname,
-          sampleEmail: data.sampleEmail,
-        });
+        // 인증 정보 저장 (토큰 포함)
+        login(
+          {
+            sampleId: data.sampleId,
+            sampleFname: data.sampleFname,
+            sampleLname: data.sampleLname,
+            sampleEmail: data.sampleEmail,
+          },
+          data.token.accessToken
+        );
 
         // 사용자 정보 페이지로 이동
         router.push(ROUTES.USER_INFO);
