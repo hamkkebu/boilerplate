@@ -94,10 +94,9 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // 허용할 Origin 설정
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "http://localhost:80",
-                "http://localhost:8080"
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "http://127.0.0.1:*"
         ));
 
         // 허용할 HTTP 메서드
@@ -112,7 +111,7 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
 
         // 노출할 헤더
-        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setExposedHeaders(List.of("Authorization", "Refresh-Token"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
