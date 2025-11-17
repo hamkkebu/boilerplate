@@ -143,18 +143,28 @@ public class SampleService {
      *
      * <p>물리적 삭제 대신 논리적 삭제를 수행합니다.</p>
      * <p>BaseEntity의 delete() 메서드를 호출하여 deleted 플래그를 true로 설정합니다.</p>
+     * <p>비밀번호를 검증한 후 삭제를 수행합니다.</p>
      *
      * @param sampleId Sample ID
-     * @throws BusinessException Sample을 찾을 수 없는 경우
+     * @param password 비밀번호
+     * @throws BusinessException Sample을 찾을 수 없거나 비밀번호가 일치하지 않는 경우
      */
     @Transactional
-    public void deleteSample(String sampleId) {
+    public void deleteSample(String sampleId, String password) {
         // Sample 조회
-        Sample sample = repository.findBySampleId(sampleId)
+        Sample sample = repository.findBySampleIdAndDeletedFalse(sampleId)
             .orElseThrow(() -> new BusinessException(
                 ErrorCode.RESOURCE_NOT_FOUND,
                 "삭제할 Sample을 찾을 수 없습니다: sampleId=" + sampleId
             ));
+
+        // 비밀번호 검증
+        if (!passwordEncoder.matches(password, sample.getSamplePassword())) {
+            throw new BusinessException(
+                ErrorCode.AUTHENTICATION_FAILED,
+                "비밀번호가 일치하지 않습니다"
+            );
+        }
 
         // Soft Delete 수행
         sample.delete();

@@ -27,18 +27,18 @@
 
       <form class="leave-form" @submit.prevent="confirmAndLeave">
         <div class="input-group">
-          <label for="userId" class="input-label">탈퇴할 계정 아이디</label>
+          <label for="password" class="input-label">비밀번호 확인</label>
           <div class="input-wrapper">
             <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
             <input
-              id="userId"
-              type="text"
+              id="password"
+              type="password"
               class="input-field"
-              placeholder="탈퇴할 아이디를 입력하세요"
-              v-model="user_id"
+              placeholder="비밀번호를 입력하세요"
+              v-model="password"
               required
             />
           </div>
@@ -58,7 +58,7 @@
             </svg>
             <span>취소</span>
           </button>
-          <button type="submit" class="btn-leave" :disabled="!confirmed || !user_id">
+          <button type="submit" class="btn-leave" :disabled="!confirmed || !password">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -72,10 +72,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import apiClient from '@/api/client';
 import { useApi } from '@/composables/useApi';
+import { useAuth } from '@/composables/useAuth';
 import { API_ENDPOINTS, ROUTES, SUCCESS_MESSAGES } from '@/constants';
 
 export default defineComponent({
@@ -83,9 +84,21 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const { loading, execute } = useApi();
+    const { currentUser, restoreUser, logout } = useAuth();
 
-    const user_id = ref('');
+    const password = ref('');
     const confirmed = ref(false);
+
+    // 컴포넌트 마운트 시 사용자 정보 복원
+    onMounted(() => {
+      restoreUser();
+
+      // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
+      if (!currentUser.value) {
+        alert('로그인이 필요합니다.');
+        router.push(ROUTES.LOGIN);
+      }
+    });
 
     const confirmAndLeave = () => {
       if (!confirmed.value) {
@@ -93,14 +106,20 @@ export default defineComponent({
         return;
       }
 
-      if (!user_id.value) {
-        alert('아이디를 입력해주세요.');
+      if (!password.value) {
+        alert('비밀번호를 입력해주세요.');
+        return;
+      }
+
+      if (!currentUser.value) {
+        alert('로그인 정보를 찾을 수 없습니다.');
+        router.push(ROUTES.LOGIN);
         return;
       }
 
       if (
         confirm(
-          `정말로 "${user_id.value}" 계정을 탈퇴하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
+          `정말로 "${currentUser.value.sampleId}" 계정을 탈퇴하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
         )
       ) {
         leaveSubmit();
@@ -108,15 +127,22 @@ export default defineComponent({
     };
 
     const leaveSubmit = async () => {
+      if (!currentUser.value) {
+        return;
+      }
+
       await execute(
-        () => apiClient.delete(API_ENDPOINTS.SAMPLE_BY_ID(user_id.value)),
+        () =>
+          apiClient.delete(API_ENDPOINTS.SAMPLE_BY_ID(currentUser.value!.sampleId), {
+            data: {
+              password: password.value,
+            },
+          }),
         {
           onSuccess: () => {
             alert('회원 탈퇴가 완료되었습니다.');
-            router.push(ROUTES.USER_INFO);
-          },
-          onError: (error) => {
-            alert(`회원 탈퇴 중 오류가 발생했습니다: ${error}`);
+            logout();
+            router.push(ROUTES.LOGIN);
           },
         }
       );
@@ -127,7 +153,7 @@ export default defineComponent({
     };
 
     return {
-      user_id,
+      password,
       confirmed,
       loading,
       confirmAndLeave,

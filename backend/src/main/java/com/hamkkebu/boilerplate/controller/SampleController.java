@@ -4,6 +4,7 @@ import com.hamkkebu.boilerplate.common.constant.CommonConstants;
 import com.hamkkebu.boilerplate.common.dto.ApiResponse;
 import com.hamkkebu.boilerplate.common.dto.PageRequestDto;
 import com.hamkkebu.boilerplate.common.dto.PageResponseDto;
+import com.hamkkebu.boilerplate.data.dto.DeleteSampleRequest;
 import com.hamkkebu.boilerplate.data.dto.RequestSample;
 import com.hamkkebu.boilerplate.data.dto.ResponseSample;
 import com.hamkkebu.boilerplate.service.SampleService;
@@ -86,14 +87,16 @@ public class SampleController {
     }
 
     /**
-     * Sample 삭제
+     * Sample 삭제 (비밀번호 검증)
      * DELETE /api/v1/samples/{sampleId}
      */
     @DeleteMapping("/{sampleId}")
-    public ApiResponse<Void> deleteSample(@PathVariable String sampleId) {
-        log.info("Deleting sample: sampleId={}", sampleId);
+    public ApiResponse<Void> deleteSample(
+            @PathVariable String sampleId,
+            @Valid @RequestBody DeleteSampleRequest request) {
+        log.info("Deleting sample with password verification: sampleId={}", sampleId);
 
-        service.deleteSample(sampleId);
+        service.deleteSample(sampleId, request.getPassword());
 
         return ApiResponse.success("Sample이 성공적으로 삭제되었습니다");
     }
