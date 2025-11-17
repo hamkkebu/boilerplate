@@ -3,6 +3,7 @@ package com.hamkkebu.boilerplate.service;
 import com.hamkkebu.boilerplate.common.exception.BusinessException;
 import com.hamkkebu.boilerplate.common.exception.ErrorCode;
 import com.hamkkebu.boilerplate.common.security.JwtTokenProvider;
+import com.hamkkebu.boilerplate.common.security.TokenBlacklistService;
 import com.hamkkebu.boilerplate.data.dto.LoginRequest;
 import com.hamkkebu.boilerplate.data.dto.LoginResponse;
 import com.hamkkebu.boilerplate.data.dto.ResponseSample;
@@ -35,6 +36,7 @@ public class AuthService {
     private final SampleMapper sampleMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final TokenBlacklistService tokenBlacklistService;
 
     /**
      * 로그인 처리
@@ -141,5 +143,29 @@ public class AuthService {
      */
     public String getUserIdFromToken(String token) {
         return jwtTokenProvider.getUserId(token);
+    }
+
+    /**
+     * 로그아웃 처리
+     *
+     * @param accessToken 액세스 토큰
+     * @param refreshToken 리프레시 토큰
+     */
+    public void logout(String accessToken, String refreshToken) {
+        log.info("Logout attempt");
+
+        // 액세스 토큰 블랙리스트 추가
+        if (accessToken != null && !accessToken.isEmpty()) {
+            long accessTokenExpiration = jwtTokenProvider.getExpirationDate(accessToken).getTime();
+            tokenBlacklistService.addToBlacklist(accessToken, accessTokenExpiration);
+        }
+
+        // 리프레시 토큰 블랙리스트 추가
+        if (refreshToken != null && !refreshToken.isEmpty()) {
+            long refreshTokenExpiration = jwtTokenProvider.getExpirationDate(refreshToken).getTime();
+            tokenBlacklistService.addToBlacklist(refreshToken, refreshTokenExpiration);
+        }
+
+        log.info("Logout successful. Tokens added to blacklist");
     }
 }

@@ -33,6 +33,7 @@ import java.util.Collections;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final TokenBlacklistService tokenBlacklistService;
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
@@ -51,7 +52,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 1. Request에서 JWT 토큰 추출
             String token = extractToken(request);
 
-            // 2. 토큰 유효성 검증 및 인증 정보 설정
+            // 2. 토큰 블랙리스트 확인
+            if (StringUtils.hasText(token) && tokenBlacklistService.isBlacklisted(token)) {
+                log.warn("Blocked request with blacklisted token");
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            // 3. 토큰 유효성 검증 및 인증 정보 설정
             if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
                 // 토큰에서 사용자 ID 추출
                 String userId = jwtTokenProvider.getUserId(token);

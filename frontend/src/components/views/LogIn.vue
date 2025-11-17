@@ -95,7 +95,12 @@ export default defineComponent({
       );
 
       if (data) {
-        // 인증 정보 저장 (토큰 포함)
+        // Refresh Token 저장
+        if (data.token.refreshToken) {
+          localStorage.setItem('refreshToken', data.token.refreshToken);
+        }
+
+        // 인증 정보 저장 (액세스 토큰 포함)
         login(
           {
             sampleId: data.sampleId,

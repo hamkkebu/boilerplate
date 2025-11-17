@@ -83,4 +83,28 @@ public class AuthController {
         String userId = authService.getUserIdFromToken(jwtToken);
         return ApiResponse.success(userId, "사용자 정보 조회 성공");
     }
+
+    /**
+     * 로그아웃
+     *
+     * @param accessToken 액세스 토큰
+     * @param refreshToken 리프레시 토큰
+     * @return 로그아웃 성공 메시지
+     */
+    @Operation(summary = "로그아웃", description = "로그아웃하고 토큰을 무효화합니다.")
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(
+            @RequestHeader(value = "Authorization", required = false) String accessToken,
+            @RequestHeader(value = "Refresh-Token", required = false) String refreshToken) {
+        log.info("Logout request");
+
+        // "Bearer " 접두사 제거
+        String jwtAccessToken = null;
+        if (accessToken != null && accessToken.startsWith("Bearer ")) {
+            jwtAccessToken = accessToken.substring(7);
+        }
+
+        authService.logout(jwtAccessToken, refreshToken);
+        return ApiResponse.success("로그아웃 성공");
+    }
 }

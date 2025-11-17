@@ -16,6 +16,7 @@ export const API_ENDPOINTS = {
   // 인증 관련
   AUTH: {
     LOGIN: '/api/v1/auth/login',
+    LOGOUT: '/api/v1/auth/logout',
     REFRESH: '/api/v1/auth/refresh',
     VALIDATE: '/api/v1/auth/validate',
     ME: '/api/v1/auth/me',

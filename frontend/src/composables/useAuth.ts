@@ -1,4 +1,6 @@
 import { ref, computed } from 'vue';
+import apiClient from '@/api/client';
+import { API_ENDPOINTS } from '@/constants';
 import type { AuthUser } from '@/types/domain.types';
 
 /**
@@ -24,10 +26,25 @@ export function useAuth() {
   /**
    * 로그아웃
    */
-  const logout = () => {
-    currentUser.value = null;
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('currentUser');
+  const logout = async () => {
+    try {
+      // 백엔드에 로그아웃 요청하여 토큰 무효화
+      const refreshToken = localStorage.getItem('refreshToken');
+      await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT, null, {
+        headers: {
+          'Refresh-Token': refreshToken || '',
+        },
+      });
+    } catch (error) {
+      console.error('Logout API error:', error);
+      // API 호출 실패해도 로컬 데이터는 삭제
+    } finally {
+      // 로컬 스토리지 정리
+      currentUser.value = null;
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('currentUser');
+    }
   };
 
   /**
