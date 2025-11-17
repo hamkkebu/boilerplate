@@ -28,6 +28,7 @@ export interface CreateSampleRequest {
   sampleId: string;
   sampleFname: string;
   sampleLname: string;
+  samplePassword: string;
   sampleNickname?: string;
   sampleEmail?: string;
   samplePhone?: string;

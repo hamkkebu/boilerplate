@@ -73,6 +73,48 @@
               />
             </div>
           </div>
+
+          <div class="input-group">
+            <label :for="'samplePassword'" class="input-label">비밀번호 *</label>
+            <div class="input-wrapper">
+              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <input
+                id="samplePassword"
+                type="password"
+                class="input-field"
+                placeholder="비밀번호 (8자 이상, 영문+숫자)"
+                v-model="dict_columns.samplePassword"
+                required
+                minlength="8"
+              />
+            </div>
+            <p class="input-hint">8자 이상, 영문과 숫자를 포함해야 합니다</p>
+          </div>
+
+          <div class="input-group">
+            <label :for="'passwordConfirm'" class="input-label">비밀번호 확인 *</label>
+            <div class="input-wrapper">
+              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <input
+                id="passwordConfirm"
+                type="password"
+                class="input-field"
+                :class="{ 'error': passwordConfirm && passwordConfirm !== dict_columns.samplePassword }"
+                placeholder="비밀번호를 다시 입력하세요"
+                v-model="passwordConfirm"
+                required
+              />
+            </div>
+            <p v-if="passwordConfirm && passwordConfirm !== dict_columns.samplePassword" class="error-message">
+              비밀번호가 일치하지 않습니다
+            </p>
+          </div>
         </div>
 
         <!-- 연락처 정보 섹션 -->
@@ -202,7 +244,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive } from 'vue';
+import { defineComponent, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import apiClient from '@/api/client';
 import { useApi } from '@/composables/useApi';
@@ -214,11 +256,13 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const { loading, execute } = useApi<Sample>();
+    const passwordConfirm = ref('');
 
     const formData = reactive<CreateSampleRequest>({
       sampleId: '',
       sampleFname: '',
       sampleLname: '',
+      samplePassword: '',
       sampleNickname: '',
       sampleEmail: '',
       samplePhone: '',
@@ -231,6 +275,19 @@ export default defineComponent({
     });
 
     const signUpSubmit = async () => {
+      // 비밀번호 확인 검증
+      if (formData.samplePassword !== passwordConfirm.value) {
+        alert('비밀번호가 일치하지 않습니다.');
+        return;
+      }
+
+      // 비밀번호 강도 검증 (8자 이상, 영문+숫자)
+      const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d).{8,}$/;
+      if (!passwordRegex.test(formData.samplePassword)) {
+        alert('비밀번호는 8자 이상이며 영문자와 숫자를 포함해야 합니다.');
+        return;
+      }
+
       const result = await execute(
         () => apiClient.post(API_ENDPOINTS.SAMPLES, formData),
         {
@@ -248,6 +305,7 @@ export default defineComponent({
 
     return {
       dict_columns: formData,
+      passwordConfirm,
       loading,
       signUpSubmit,
       goToLogin,
@@ -393,6 +451,29 @@ export default defineComponent({
 
 .input-field::placeholder {
   color: #cbd5e0;
+}
+
+.input-field.error {
+  border-color: #f56565;
+  background-color: #fff5f5;
+}
+
+.input-field.error:focus {
+  border-color: #f56565;
+  box-shadow: 0 0 0 3px rgba(245, 101, 101, 0.1);
+}
+
+.input-hint {
+  font-size: 12px;
+  color: #718096;
+  margin: 4px 0 0 0;
+}
+
+.error-message {
+  font-size: 12px;
+  color: #f56565;
+  margin: 4px 0 0 0;
+  font-weight: 500;
 }
 
 .btn-signup {
