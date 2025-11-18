@@ -3,7 +3,7 @@ package com.hamkkebu.boilerplate.service;
 import com.hamkkebu.boilerplate.common.exception.BusinessException;
 import com.hamkkebu.boilerplate.common.exception.ErrorCode;
 import com.hamkkebu.boilerplate.common.security.JwtTokenProvider;
-import com.hamkkebu.boilerplate.common.security.TokenBlacklistService;
+import com.hamkkebu.boilerplate.common.security.RefreshTokenWhitelistService;
 import com.hamkkebu.boilerplate.data.dto.LoginRequest;
 import com.hamkkebu.boilerplate.data.dto.LoginResponse;
 import com.hamkkebu.boilerplate.data.dto.ResponseSample;
@@ -13,6 +13,7 @@ import com.hamkkebu.boilerplate.data.mapper.SampleMapper;
 import com.hamkkebu.boilerplate.repository.SampleJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
  * <ul>
  *   <li>로그인 처리 및 JWT 토큰 발급</li>
  *   <li>리프레시 토큰으로 액세스 토큰 갱신</li>
- *   <li>비밀번호 검증</li>
+ *   <li>RefreshToken Whitelist 관리 (Redis)</li>
  * </ul>
  */
 @Slf4j
@@ -36,7 +37,10 @@ public class AuthService {
     private final SampleMapper sampleMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-    private final TokenBlacklistService tokenBlacklistService;
+    private final RefreshTokenWhitelistService refreshTokenWhitelistService;
+
+    @Value("${jwt.refresh-token-validity:604800000}") // 7일 (밀리초)
+    private long refreshTokenValidity;
 
     /**
      * 로그인 처리
@@ -72,6 +76,13 @@ public class AuthService {
         String accessToken = jwtTokenProvider.createAccessToken(sample.getSampleId());
         String refreshToken = jwtTokenProvider.createRefreshToken(sample.getSampleId());
 
+        // RefreshToken을 Redis Whitelist에 저장
+        refreshTokenWhitelistService.addToWhitelist(
+            sample.getSampleId(),
+            refreshToken,
+            refreshTokenValidity
+        );
+
         // 토큰 만료 시간 (밀리초 -> 초)
         Long expiresIn = (jwtTokenProvider.getExpirationDate(accessToken).getTime() - System.currentTimeMillis()) / 1000;
 
@@ -85,6 +96,8 @@ public class AuthService {
 
     /**
      * 리프레시 토큰으로 액세스 토큰 갱신
+     *
+     * <p>Redis Whitelist에서 refreshToken을 검증합니다.</p>
      *
      * @param refreshToken 리프레시 토큰
      * @return 새로운 액세스 토큰
@@ -105,6 +118,15 @@ public class AuthService {
 
         // 사용자 ID 추출
         String userId = jwtTokenProvider.getUserId(refreshToken);
+
+        // Redis Whitelist에서 refreshToken 검증
+        if (!refreshTokenWhitelistService.isWhitelisted(userId, refreshToken)) {
+            log.warn("RefreshToken not in whitelist: userId={}", userId);
+            throw new BusinessException(
+                ErrorCode.INVALID_REFRESH_TOKEN,
+                "유효하지 않거나 로그아웃된 리프레시 토큰입니다. 다시 로그인해주세요."
+            );
+        }
 
         // 사용자 존재 여부 확인
         sampleRepository.findBySampleIdAndDeletedFalse(userId)
@@ -140,32 +162,46 @@ public class AuthService {
      *
      * @param token JWT 토큰
      * @return 사용자 ID
+     * @throws BusinessException 토큰이 유효하지 않은 경우
      */
     public String getUserIdFromToken(String token) {
-        return jwtTokenProvider.getUserId(token);
+        try {
+            return jwtTokenProvider.getUserId(token);
+        } catch (Exception e) {
+            log.warn("Failed to extract user ID from token: {}", e.getMessage());
+            throw new BusinessException(
+                ErrorCode.INVALID_TOKEN,
+                "유효하지 않은 토큰입니다"
+            );
+        }
     }
 
     /**
      * 로그아웃 처리
      *
-     * @param accessToken 액세스 토큰
+     * <p>refreshToken을 Redis Whitelist에서 제거합니다.</p>
+     *
      * @param refreshToken 리프레시 토큰
      */
-    public void logout(String accessToken, String refreshToken) {
+    public void logout(String refreshToken) {
         log.info("Logout attempt");
 
-        // 액세스 토큰 블랙리스트 추가
-        if (accessToken != null && !accessToken.isEmpty()) {
-            long accessTokenExpiration = jwtTokenProvider.getExpirationDate(accessToken).getTime();
-            tokenBlacklistService.addToBlacklist(accessToken, accessTokenExpiration);
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            log.warn("Logout called without refreshToken");
+            return;
         }
 
-        // 리프레시 토큰 블랙리스트 추가
-        if (refreshToken != null && !refreshToken.isEmpty()) {
-            long refreshTokenExpiration = jwtTokenProvider.getExpirationDate(refreshToken).getTime();
-            tokenBlacklistService.addToBlacklist(refreshToken, refreshTokenExpiration);
-        }
+        try {
+            // refreshToken에서 사용자 ID 추출
+            String userId = jwtTokenProvider.getUserId(refreshToken);
 
-        log.info("Logout successful. Tokens added to blacklist");
+            // Redis Whitelist에서 제거
+            refreshTokenWhitelistService.removeFromWhitelist(userId);
+
+            log.info("Logout successful for user: {}", userId);
+        } catch (Exception e) {
+            log.warn("Failed to logout: {}", e.getMessage());
+            // 로그아웃 실패해도 클라이언트에서 토큰을 삭제하므로 문제없음
+        }
     }
 }

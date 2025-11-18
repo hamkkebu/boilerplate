@@ -20,6 +20,35 @@ services:
       timeout: 5s
       retries: 5
 
+  # Redis (Refresh Token 저장)
+  redis:
+    image: redis:7-alpine
+    container_name: hamkkebu-boilerplate-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - hamkkebu-boilerplate-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RedisInsight (Redis 관리 도구)
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: hamkkebu-boilerplate-redisinsight
+    ports:
+      - "8001:5540"
+    volumes:
+      - redisinsight-data:/data
+    depends_on:
+      - redis
+    networks:
+      - hamkkebu-boilerplate-network
+
   # Zookeeper (Kafka 의존성)
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -94,14 +123,19 @@ services:
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_KAFKA_CONSUMER_GROUP_ID: boilerplate-service-group
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
     restart: always
     depends_on:
       database:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       kafka:
         condition: service_healthy
     links:
       - database
+      - redis
       - kafka
     networks:
       - hamkkebu-boilerplate-network
@@ -127,3 +161,5 @@ networks:
 
 volumes:
   mysql-data:
+  redis-data:
+  redisinsight-data:

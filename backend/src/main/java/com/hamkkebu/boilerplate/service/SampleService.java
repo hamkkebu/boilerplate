@@ -40,6 +40,7 @@ public class SampleService {
     private final SampleJpaRepository repository;
     private final ApplicationEventPublisher publisher;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    private final com.hamkkebu.boilerplate.common.security.RefreshTokenWhitelistService refreshTokenWhitelistService;
 
     /**
      * Sample ID 중복 확인
@@ -164,13 +165,16 @@ public class SampleService {
      * <p>물리적 삭제 대신 논리적 삭제를 수행합니다.</p>
      * <p>BaseEntity의 delete() 메서드를 호출하여 deleted 플래그를 true로 설정합니다.</p>
      * <p>비밀번호를 검증한 후 삭제를 수행합니다.</p>
+     * <p>회원 탈퇴 시 refreshToken을 Whitelist에서 제거합니다.</p>
      *
      * @param sampleId Sample ID
      * @param password 비밀번호
+     * @param accessToken 액세스 토큰 (사용 안 함)
+     * @param refreshToken 리프레시 토큰 (Whitelist에서 제거)
      * @throws BusinessException Sample을 찾을 수 없거나 비밀번호가 일치하지 않는 경우
      */
     @Transactional
-    public void deleteSample(String sampleId, String password) {
+    public void deleteSample(String sampleId, String password, String accessToken, String refreshToken) {
         // Sample 조회
         Sample sample = repository.findBySampleIdAndDeletedFalse(sampleId)
             .orElseThrow(() -> new BusinessException(
@@ -193,5 +197,9 @@ public class SampleService {
         repository.save(sample);
 
         log.info("Sample soft deleted: sampleId={}, deletedAt={}", sampleId, sample.getDeletedAt());
+
+        // RefreshToken을 Whitelist에서 제거
+        refreshTokenWhitelistService.removeFromWhitelist(sampleId);
+        log.info("RefreshToken removed from whitelist for deleted user: {}", sampleId);
     }
 }

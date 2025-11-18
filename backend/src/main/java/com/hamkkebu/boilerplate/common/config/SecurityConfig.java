@@ -1,5 +1,6 @@
 package com.hamkkebu.boilerplate.common.config;
 
+import com.hamkkebu.boilerplate.common.security.JwtAuthenticationEntryPoint;
 import com.hamkkebu.boilerplate.common.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -36,6 +37,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     /**
      * Security Filter Chain 설정
@@ -54,12 +56,19 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
+                // 예외 처리 설정
+                .exceptionHandling(exception -> exception
+                        // 인증 실패 시 401 Unauthorized 반환
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                )
+
                 // 요청별 권한 설정
                 .authorizeHttpRequests(auth -> auth
                         // 인증 없이 접근 가능한 엔드포인트
                         .requestMatchers(
                                 "/api/v1/auth/**",
-                                "/api/v1/samples/**",
+                                // 회원가입 및 중복 확인만 인증 불필요
+                                "/api/v1/samples/check/**",
                                 "/actuator/**",
                                 "/h2-console/**",
                                 // Swagger UI
@@ -69,6 +78,9 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
+
+                        // 회원가입은 POST 메서드만 인증 불필요
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/samples").permitAll()
 
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
@@ -107,7 +119,7 @@ public class SecurityConfig {
         // 허용할 헤더
         configuration.setAllowedHeaders(List.of("*"));
 
-        // 인증 정보 허용
+        // 인증 정보 허용 (JWT 토큰 사용)
         configuration.setAllowCredentials(true);
 
         // 노출할 헤더

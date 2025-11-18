@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
  * 인증 관련 API 컨트롤러
  *
  * <p>로그인, 토큰 갱신 등 인증 관련 엔드포인트를 제공합니다.</p>
+ * <p>보안 전략: RefreshToken Whitelist (Redis 기반)</p>
  */
 @Tag(name = "Auth API", description = "인증 관련 API")
 @Slf4j
@@ -29,10 +30,17 @@ public class AuthController {
     /**
      * 로그인
      *
+     * <p>로그인 성공 시 accessToken과 refreshToken을 JSON으로 반환합니다.</p>
+     * <p>refreshToken은 Redis Whitelist에 저장됩니다.</p>
+     *
      * @param request 로그인 요청 (사용자 ID, 비밀번호)
      * @return 로그인 응답 (사용자 정보 + JWT 토큰)
      */
-    @Operation(summary = "로그인", description = "사용자 ID와 비밀번호로 로그인하고 JWT 토큰을 발급받습니다.")
+    @Operation(
+        summary = "로그인",
+        description = "사용자 ID와 비밀번호로 로그인하고 JWT 토큰을 발급받습니다. refreshToken은 Redis Whitelist에 저장됩니다.",
+        security = {} // 인증 불필요
+    )
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         log.info("Login request for user: {}", request.getSampleId());
@@ -43,10 +51,17 @@ public class AuthController {
     /**
      * 토큰 갱신
      *
+     * <p>refreshToken으로 새로운 accessToken을 발급받습니다.</p>
+     * <p>Redis Whitelist에서 refreshToken을 검증합니다.</p>
+     *
      * @param refreshToken 리프레시 토큰
      * @return 새로운 액세스 토큰
      */
-    @Operation(summary = "토큰 갱신", description = "리프레시 토큰으로 새로운 액세스 토큰을 발급받습니다.")
+    @Operation(
+        summary = "토큰 갱신",
+        description = "refreshToken으로 새로운 accessToken을 발급받습니다. refreshToken은 Redis Whitelist에서 검증됩니다.",
+        security = {} // 인증 불필요 (refreshToken 사용)
+    )
     @PostMapping("/refresh")
     public ApiResponse<TokenResponse> refresh(@RequestHeader("Refresh-Token") String refreshToken) {
         log.info("Token refresh request");
@@ -60,9 +75,18 @@ public class AuthController {
      * @param token 검증할 JWT 토큰
      * @return 토큰 유효 여부
      */
-    @Operation(summary = "토큰 검증", description = "JWT 토큰의 유효성을 검증합니다.")
+    @Operation(
+        summary = "토큰 검증",
+        description = "JWT 토큰의 유효성을 검증합니다.",
+        security = {} // 인증 불필요 (검증 대상 토큰을 직접 전달)
+    )
     @GetMapping("/validate")
-    public ApiResponse<Boolean> validateToken(@RequestHeader("Authorization") String token) {
+    public ApiResponse<Boolean> validateToken(@RequestHeader(value = "Authorization", required = false) String token) {
+        // 토큰이 없는 경우
+        if (token == null || token.isEmpty()) {
+            return ApiResponse.success(false, "토큰이 제공되지 않았습니다");
+        }
+
         // "Bearer " 접두사 제거
         String jwtToken = token.startsWith("Bearer ") ? token.substring(7) : token;
         boolean isValid = authService.validateToken(jwtToken);
@@ -77,7 +101,12 @@ public class AuthController {
      */
     @Operation(summary = "현재 사용자 정보", description = "JWT 토큰에서 현재 사용자 정보를 조회합니다.")
     @GetMapping("/me")
-    public ApiResponse<String> getCurrentUser(@RequestHeader("Authorization") String token) {
+    public ApiResponse<String> getCurrentUser(@RequestHeader(value = "Authorization", required = false) String token) {
+        // 토큰이 없는 경우
+        if (token == null || token.isEmpty()) {
+            return ApiResponse.error("AUTH-402", "토큰이 제공되지 않았습니다");
+        }
+
         // "Bearer " 접두사 제거
         String jwtToken = token.startsWith("Bearer ") ? token.substring(7) : token;
         String userId = authService.getUserIdFromToken(jwtToken);
@@ -87,24 +116,19 @@ public class AuthController {
     /**
      * 로그아웃
      *
-     * @param accessToken 액세스 토큰
+     * <p>refreshToken을 Redis Whitelist에서 제거합니다.</p>
+     *
      * @param refreshToken 리프레시 토큰
      * @return 로그아웃 성공 메시지
      */
-    @Operation(summary = "로그아웃", description = "로그아웃하고 토큰을 무효화합니다.")
+    @Operation(
+        summary = "로그아웃",
+        description = "로그아웃하고 refreshToken을 Whitelist에서 제거합니다."
+    )
     @PostMapping("/logout")
-    public ApiResponse<Void> logout(
-            @RequestHeader(value = "Authorization", required = false) String accessToken,
-            @RequestHeader(value = "Refresh-Token", required = false) String refreshToken) {
+    public ApiResponse<Void> logout(@RequestHeader(value = "Refresh-Token", required = false) String refreshToken) {
         log.info("Logout request");
-
-        // "Bearer " 접두사 제거
-        String jwtAccessToken = null;
-        if (accessToken != null && accessToken.startsWith("Bearer ")) {
-            jwtAccessToken = accessToken.substring(7);
-        }
-
-        authService.logout(jwtAccessToken, refreshToken);
+        authService.logout(refreshToken);
         return ApiResponse.success("로그아웃 성공");
     }
 }

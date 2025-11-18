@@ -8,6 +8,7 @@ import com.hamkkebu.boilerplate.data.dto.DeleteSampleRequest;
 import com.hamkkebu.boilerplate.data.dto.RequestSample;
 import com.hamkkebu.boilerplate.data.dto.ResponseSample;
 import com.hamkkebu.boilerplate.service.SampleService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,11 @@ public class SampleController {
      * Sample 생성
      * POST /api/v1/samples
      */
+    @Operation(
+        summary = "회원가입",
+        description = "새로운 사용자를 생성합니다.",
+        security = {} // 인증 불필요
+    )
     @PostMapping
     public ApiResponse<ResponseSample> createSample(@Valid @RequestBody RequestSample requestDto) {
         log.info("Creating sample: sampleId={}", requestDto.getSampleId());
@@ -51,6 +57,11 @@ public class SampleController {
      * Sample ID 중복 확인
      * GET /api/v1/samples/check/{sampleId}
      */
+    @Operation(
+        summary = "아이디 중복 확인",
+        description = "사용자 ID의 중복 여부를 확인합니다.",
+        security = {} // 인증 불필요
+    )
     @GetMapping("/check/{sampleId}")
     public ApiResponse<Boolean> checkSampleIdDuplicate(@PathVariable String sampleId) {
         log.info("Checking sample ID duplicate: sampleId={}", sampleId);
@@ -64,6 +75,11 @@ public class SampleController {
      * Sample 닉네임 중복 확인
      * GET /api/v1/samples/check/nickname/{nickname}
      */
+    @Operation(
+        summary = "닉네임 중복 확인",
+        description = "닉네임의 중복 여부를 확인합니다.",
+        security = {} // 인증 불필요
+    )
     @GetMapping("/check/nickname/{nickname}")
     public ApiResponse<Boolean> checkSampleNicknameDuplicate(@PathVariable String nickname) {
         log.info("Checking sample nickname duplicate: nickname={}", nickname);
@@ -119,10 +135,18 @@ public class SampleController {
     @DeleteMapping("/{sampleId}")
     public ApiResponse<Void> deleteSample(
             @PathVariable String sampleId,
-            @Valid @RequestBody DeleteSampleRequest request) {
+            @Valid @RequestBody DeleteSampleRequest request,
+            @RequestHeader(value = "Authorization", required = false) String accessToken,
+            @RequestHeader(value = "Refresh-Token", required = false) String refreshToken) {
         log.info("Deleting sample with password verification: sampleId={}", sampleId);
 
-        service.deleteSample(sampleId, request.getPassword());
+        // "Bearer " 접두사 제거
+        String jwtAccessToken = null;
+        if (accessToken != null && accessToken.startsWith("Bearer ")) {
+            jwtAccessToken = accessToken.substring(7);
+        }
+
+        service.deleteSample(sampleId, request.getPassword(), jwtAccessToken, refreshToken);
 
         return ApiResponse.success("Sample이 성공적으로 삭제되었습니다");
     }
