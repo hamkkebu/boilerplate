@@ -6,20 +6,22 @@ import com.hamkkebu.boilerplate.common.dto.PageRequestDto;
 import com.hamkkebu.boilerplate.common.dto.PageResponseDto;
 import com.hamkkebu.boilerplate.common.exception.BusinessException;
 import com.hamkkebu.boilerplate.common.exception.ErrorCode;
-import com.hamkkebu.boilerplate.data.dto.RequestSample;
-import com.hamkkebu.boilerplate.data.dto.ResponseSample;
+import com.hamkkebu.boilerplate.common.security.PasswordValidator;
+import com.hamkkebu.boilerplate.common.security.RefreshTokenWhitelistService;
+import com.hamkkebu.boilerplate.data.dto.SampleRequest;
+import com.hamkkebu.boilerplate.data.dto.SampleResponse;
 import com.hamkkebu.boilerplate.data.entity.Sample;
 import com.hamkkebu.boilerplate.data.event.SampleEvent;
 import com.hamkkebu.boilerplate.data.mapper.SampleMapper;
 import com.hamkkebu.boilerplate.repository.SampleJpaRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * Sample Service
@@ -39,8 +41,9 @@ public class SampleService {
     private final SampleMapper mapper;
     private final SampleJpaRepository repository;
     private final ApplicationEventPublisher publisher;
-    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
-    private final com.hamkkebu.boilerplate.common.security.RefreshTokenWhitelistService refreshTokenWhitelistService;
+    private final PasswordEncoder passwordEncoder;
+    private final PasswordValidator passwordValidator;
+    private final RefreshTokenWhitelistService refreshTokenWhitelistService;
 
     /**
      * Sample ID 중복 확인
@@ -48,8 +51,9 @@ public class SampleService {
      * @param sampleId 확인할 Sample ID
      * @return 중복이면 true, 아니면 false
      */
-    public boolean checkSampleIdDuplicate(String sampleId) {
-        return repository.findBySampleId(sampleId).isPresent();
+    @Transactional(readOnly = true)
+    public boolean isIdDuplicate(String sampleId) {
+        return repository.findBySampleIdAndIsDeletedFalse(sampleId).isPresent();
     }
 
     /**
@@ -58,55 +62,81 @@ public class SampleService {
      * @param sampleNickname 확인할 Sample 닉네임
      * @return 중복이면 true, 아니면 false
      */
-    public boolean checkSampleNicknameDuplicate(String sampleNickname) {
-        return repository.findBySampleNicknameAndDeletedFalse(sampleNickname).isPresent();
+    @Transactional(readOnly = true)
+    public boolean isNicknameDuplicate(String sampleNickname) {
+        return repository.findBySampleNicknameAndIsDeletedFalse(sampleNickname).isPresent();
     }
 
     /**
      * Sample 생성
      *
+     * <p>Race Condition 방어:</p>
+     * <ul>
+     *   <li>DB 레벨: 조건부 UNIQUE 제약조건으로 중복 가입 차단 (idx_sample_id_active, idx_sample_nickname_active)</li>
+     *   <li>애플리케이션 레벨: 사전 중복 체크로 불필요한 DB 저장 시도 방지 (성능 최적화)</li>
+     *   <li>동시 가입 시도 시: DataIntegrityViolationException catch 후 USER_ALREADY_EXISTS 반환</li>
+     * </ul>
+     *
+     * <p>처리 순서:</p>
+     * <ol>
+     *   <li>비밀번호 형식 검증</li>
+     *   <li>sampleId/nickname 중복 체크 (애플리케이션 레벨 - 빠른 실패)</li>
+     *   <li>엔티티 생성 및 저장 시도</li>
+     *   <li>DataIntegrityViolationException 발생 시 → USER_ALREADY_EXISTS 처리 (Race Condition 케이스)</li>
+     * </ol>
+     *
      * @param requestDto Sample 생성 요청
      * @return 생성된 Sample
-     * @throws BusinessException 이미 존재하는 sampleId인 경우
+     * @throws BusinessException 이미 존재하는 sampleId 또는 nickname인 경우, 비밀번호 형식이 올바르지 않은 경우
      */
     @Transactional
-    public ResponseSample createSample(RequestSample requestDto) {
-        // 중복 체크
-        if (repository.findBySampleId(requestDto.getSampleId()).isPresent()) {
+    public SampleResponse createSample(SampleRequest requestDto) {
+        // 비밀번호 형식 검증 (8자 이상, 영문+숫자+특수문자)
+        passwordValidator.validatePasswordFormat(requestDto.getPassword());
+
+        // sampleId 중복 체크
+        // SECURITY: 상세 정보 노출 방지 (User Enumeration 방지)
+        if (repository.findBySampleIdAndIsDeletedFalse(requestDto.getUsername()).isPresent()) {
             throw new BusinessException(
-                ErrorCode.DUPLICATE_RESOURCE,
-                "이미 존재하는 sampleId입니다: " + requestDto.getSampleId()
+                ErrorCode.USER_ALREADY_EXISTS,
+                "이미 존재하는 사용자 ID입니다"
+            );
+        }
+
+        // nickname 중복 체크
+        // SECURITY: 상세 정보 노출 방지
+        if (repository.findBySampleNicknameAndIsDeletedFalse(requestDto.getNickname()).isPresent()) {
+            throw new BusinessException(
+                ErrorCode.USER_ALREADY_EXISTS,
+                "이미 존재하는 닉네임입니다"
             );
         }
 
         // DTO -> Entity 변환
         Sample entity = mapper.toEntity(requestDto);
 
-        // 비밀번호 암호화
-        String encodedPassword = passwordEncoder.encode(requestDto.getSamplePassword());
-        entity = Sample.builder()
-            .sampleId(entity.getSampleId())
-            .sampleFname(entity.getSampleFname())
-            .sampleLname(entity.getSampleLname())
-            .sampleNickname(entity.getSampleNickname())
-            .sampleEmail(entity.getSampleEmail())
-            .samplePhone(entity.getSamplePhone())
-            .samplePassword(encodedPassword)  // 암호화된 비밀번호 설정
-            .sampleCountry(entity.getSampleCountry())
-            .sampleCity(entity.getSampleCity())
-            .sampleState(entity.getSampleState())
-            .sampleStreet1(entity.getSampleStreet1())
-            .sampleStreet2(entity.getSampleStreet2())
-            .sampleZip(entity.getSampleZip())
-            .build();
+        // 비밀번호 암호화 후 설정
+        String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
+        entity.updatePassword(encodedPassword);
 
-        repository.save(entity);
+        try {
+            repository.save(entity);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // DB 제약조건 위반 (UNIQUE 제약조건이 있는 경우)
+            // Race condition으로 인한 중복 생성 시도를 catch
+            log.warn("Data integrity violation during sample creation: sampleId={}, error={}",
+                requestDto.getUsername(), e.getMessage());
+            throw new BusinessException(
+                ErrorCode.USER_ALREADY_EXISTS,
+                "이미 존재하는 사용자 정보입니다"
+            );
+        }
 
         // 이벤트 발행
         publisher.publishEvent(new SampleEvent(
             entity.getSampleId(),
-            entity.getSampleFname(),
-            entity.getSampleLname()
+            entity.getSampleFirstName(),
+            entity.getSampleLastName()
         ));
 
         log.info("Sample created: sampleId={}", entity.getSampleId());
@@ -121,8 +151,9 @@ public class SampleService {
      * @return Sample 정보
      * @throws BusinessException Sample을 찾을 수 없는 경우
      */
-    public ResponseSample getSampleInfo(String sampleId) {
-        Sample entity = repository.findBySampleId(sampleId)
+    @Transactional(readOnly = true)
+    public SampleResponse getSampleInfo(String sampleId) {
+        Sample entity = repository.findBySampleIdAndIsDeletedFalse(sampleId)
             .orElseThrow(() -> new BusinessException(
                 ErrorCode.RESOURCE_NOT_FOUND,
                 "Sample을 찾을 수 없습니다: sampleId=" + sampleId
@@ -132,30 +163,37 @@ public class SampleService {
     }
 
     /**
-     * Sample 전체 조회 (삭제되지 않은 데이터만)
+     * RBAC: 전체 Sample 조회 (ADMIN 전용)
      *
-     * @return Sample 목록
+     * <p>SECURITY: ADMIN 권한 필요</p>
+     * <p>Controller에서 @PreAuthorize("hasRole('ROLE_ADMIN')")로 권한 체크</p>
+     *
+     * @return 전체 Sample 목록
      */
-    public List<ResponseSample> getAllSampleInfo() {
-        return repository.findByDeletedFalse().stream()
+    @Transactional(readOnly = true)
+    public List<SampleResponse> getAllSampleInfo() {
+        log.info("Getting all sample info (ADMIN only)");
+        List<Sample> samples = repository.findByIsDeletedFalse();
+        return samples.stream()
             .map(mapper::toDto)
             .toList();
     }
 
     /**
-     * Sample 전체 조회 (페이징, 삭제되지 않은 데이터만)
+     * RBAC: 전체 Sample 페이징 조회 (ADMIN 전용)
      *
-     * @param pageRequest 페이징 요청
+     * <p>SECURITY: ADMIN 권한 필요</p>
+     * <p>Controller에서 @PreAuthorize("hasRole('ROLE_ADMIN')")로 권한 체크</p>
+     *
+     * @param pageRequest 페이지 요청 정보
      * @return 페이징된 Sample 목록
      */
-    public PageResponseDto<ResponseSample> getAllSampleInfoWithPaging(PageRequestDto pageRequest) {
-        // Pageable 생성 (기본 정렬: sampleNum 내림차순)
-        Pageable pageable = pageRequest.toPageable("sampleNum");
+    @Transactional(readOnly = true)
+    public PageResponseDto<SampleResponse> getAllSampleInfoWithPaging(PageRequestDto pageRequest) {
+        log.info("Getting sample info with paging (ADMIN only): page={}, size={}", pageRequest.getPage(), pageRequest.getSize());
+        Pageable pageable = pageRequest.toPageable();
+        Page<Sample> page = repository.findByIsDeletedFalse(pageable);
 
-        // 페이징 조회 (삭제되지 않은 데이터만)
-        Page<Sample> page = repository.findByDeletedFalse(pageable);
-
-        // Entity -> DTO 변환 + PageResponseDto 생성
         return PageResponseDto.of(page, mapper::toDto);
     }
 
@@ -163,32 +201,26 @@ public class SampleService {
      * Sample 삭제 (Soft Delete)
      *
      * <p>물리적 삭제 대신 논리적 삭제를 수행합니다.</p>
-     * <p>BaseEntity의 delete() 메서드를 호출하여 deleted 플래그를 true로 설정합니다.</p>
+     * <p>BaseEntity의 delete() 메서드를 호출하여 isDeleted 플래그를 true로 설정합니다.</p>
      * <p>비밀번호를 검증한 후 삭제를 수행합니다.</p>
      * <p>회원 탈퇴 시 refreshToken을 Whitelist에서 제거합니다.</p>
      *
      * @param sampleId Sample ID
      * @param password 비밀번호
-     * @param accessToken 액세스 토큰 (사용 안 함)
-     * @param refreshToken 리프레시 토큰 (Whitelist에서 제거)
+     * @param refreshToken 리프레시 토큰 (Whitelist에서 제거, optional)
      * @throws BusinessException Sample을 찾을 수 없거나 비밀번호가 일치하지 않는 경우
      */
     @Transactional
-    public void deleteSample(String sampleId, String password, String accessToken, String refreshToken) {
+    public void deleteSample(String sampleId, String password, String refreshToken) {
         // Sample 조회
-        Sample sample = repository.findBySampleIdAndDeletedFalse(sampleId)
+        Sample sample = repository.findBySampleIdAndIsDeletedFalse(sampleId)
             .orElseThrow(() -> new BusinessException(
                 ErrorCode.RESOURCE_NOT_FOUND,
                 "삭제할 Sample을 찾을 수 없습니다: sampleId=" + sampleId
             ));
 
         // 비밀번호 검증
-        if (!passwordEncoder.matches(password, sample.getSamplePassword())) {
-            throw new BusinessException(
-                ErrorCode.AUTHENTICATION_FAILED,
-                "비밀번호가 일치하지 않습니다"
-            );
-        }
+        passwordValidator.validatePassword(password, sample.getSamplePassword(), sampleId);
 
         // Soft Delete 수행
         sample.delete();

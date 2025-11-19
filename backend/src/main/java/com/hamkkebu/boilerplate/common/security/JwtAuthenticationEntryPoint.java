@@ -6,6 +6,7 @@ import com.hamkkebu.boilerplate.common.exception.ErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
@@ -18,12 +19,16 @@ import java.io.IOException;
  * 인증 실패 처리 핸들러
  *
  * <p>인증되지 않은 요청에 대해 401 Unauthorized 응답을 반환합니다.</p>
+ *
+ * FIX: ObjectMapper를 Spring Bean으로 주입받아 LocalDateTime 직렬화 지원
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    // FIXED: Spring Boot의 자동 설정된 ObjectMapper 주입 (JavaTimeModule 포함)
+    private final ObjectMapper objectMapper;
 
     @Override
     public void commence(

@@ -14,20 +14,20 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class LoginResponse {
 
-    private String sampleId;
-    private String sampleFname;
-    private String sampleLname;
-    private String sampleNickname;
-    private String sampleEmail;
+    private String username;
+    private String firstName;
+    private String lastName;
+    private String nickname;
+    private String email;
     private TokenResponse token;
 
-    public static LoginResponse of(ResponseSample sample, TokenResponse token) {
+    public static LoginResponse of(SampleResponse sample, TokenResponse token) {
         return LoginResponse.builder()
-            .sampleId(sample.getSampleId())
-            .sampleFname(sample.getSampleFname())
-            .sampleLname(sample.getSampleLname())
-            .sampleNickname(sample.getSampleNickname())
-            .sampleEmail(sample.getSampleEmail())
+            .username(sample.getUsername())
+            .firstName(sample.getFirstName())
+            .lastName(sample.getLastName())
+            .nickname(sample.getNickname())
+            .email(sample.getEmail())
             .token(token)
             .build();
     }

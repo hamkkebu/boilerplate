@@ -7,7 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 public class SampleEvent {
 
-    private String sampleId;
-    private String sampleFname;
-    private String sampleLname;
+    private String username;
+    private String firstName;
+    private String lastName;
 }

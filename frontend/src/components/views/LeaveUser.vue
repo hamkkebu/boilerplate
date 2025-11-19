@@ -119,7 +119,7 @@ export default defineComponent({
 
       if (
         confirm(
-          `정말로 "${currentUser.value.sampleId}" 계정을 탈퇴하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
+          `정말로 "${currentUser.value.username}" 계정을 탈퇴하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
         )
       ) {
         leaveSubmit();
@@ -133,9 +133,12 @@ export default defineComponent({
 
       await execute(
         () =>
-          apiClient.delete(API_ENDPOINTS.SAMPLE_BY_ID(currentUser.value!.sampleId), {
+          apiClient.delete(API_ENDPOINTS.SAMPLE_BY_ID(currentUser.value!.username), {
             data: {
               password: password.value,
+            },
+            headers: {
+              'Refresh-Token': localStorage.getItem('refreshToken') || '',
             },
           }),
         {

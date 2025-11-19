@@ -23,7 +23,7 @@ public interface SampleJpaRepository extends JpaRepository<Sample, Long> {
      * @param sampleId Sample ID
      * @return Sample 엔티티 (Optional)
      */
-    Optional<Sample> findBySampleIdAndDeletedFalse(String sampleId);
+    Optional<Sample> findBySampleIdAndIsDeletedFalse(String sampleId);
 
     /**
      * Sample 닉네임으로 Sample 조회 (삭제되지 않은 데이터만)
@@ -31,14 +31,14 @@ public interface SampleJpaRepository extends JpaRepository<Sample, Long> {
      * @param sampleNickname Sample 닉네임
      * @return Sample 엔티티 (Optional)
      */
-    Optional<Sample> findBySampleNicknameAndDeletedFalse(String sampleNickname);
+    Optional<Sample> findBySampleNicknameAndIsDeletedFalse(String sampleNickname);
 
     /**
      * 모든 Sample 조회 (삭제되지 않은 데이터만)
      *
      * @return Sample 리스트
      */
-    List<Sample> findByDeletedFalse();
+    List<Sample> findByIsDeletedFalse();
 
     /**
      * 페이징된 Sample 조회 (삭제되지 않은 데이터만)
@@ -46,18 +46,7 @@ public interface SampleJpaRepository extends JpaRepository<Sample, Long> {
      * @param pageable 페이징 정보
      * @return Sample 페이지
      */
-    Page<Sample> findByDeletedFalse(Pageable pageable);
-
-    /**
-     * 하위 호환성을 위한 메서드 (deprecated)
-     * <p>기존 코드와의 호환성을 위해 유지하되, deleted 필터가 적용된 메서드 사용을 권장합니다.</p>
-     *
-     * @deprecated {@link #findBySampleIdAndDeletedFalse(String)} 사용 권장
-     */
-    @Deprecated
-    default Optional<Sample> findBySampleId(String sampleId) {
-        return findBySampleIdAndDeletedFalse(sampleId);
-    }
+    Page<Sample> findByIsDeletedFalse(Pageable pageable);
 
     /**
      * 물리적 삭제 메서드 제거

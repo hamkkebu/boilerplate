@@ -64,6 +64,7 @@ export const SUCCESS_MESSAGES = {
  */
 export const STORAGE_KEYS = {
   AUTH_TOKEN: 'authToken',
+  REFRESH_TOKEN: 'refreshToken',
   CURRENT_USER: 'currentUser',
   THEME: 'theme',
   LANGUAGE: 'language',

@@ -87,6 +87,11 @@ public enum ErrorCode {
      */
     EXTERNAL_API_ERROR("COMMON-012", "외부 API 호출에 실패했습니다", HttpStatus.BAD_GATEWAY),
 
+    /**
+     * Rate Limit 초과
+     */
+    RATE_LIMIT_EXCEEDED("COMMON-013", "요청 횟수가 너무 많습니다. 잠시 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS),
+
     // ==================== 사용자 관련 에러 (USER-101 ~ 199) ====================
 
     /**

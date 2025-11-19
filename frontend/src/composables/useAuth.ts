@@ -13,11 +13,15 @@ export function useAuth() {
   /**
    * 로그인
    */
-  const login = (user: AuthUser, token?: string) => {
+  const login = (user: AuthUser, accessToken?: string, refreshToken?: string) => {
     currentUser.value = user;
 
-    if (token) {
-      localStorage.setItem('authToken', token);
+    if (accessToken) {
+      localStorage.setItem('authToken', accessToken);
+    }
+
+    if (refreshToken) {
+      localStorage.setItem('refreshToken', refreshToken);
     }
 
     localStorage.setItem('currentUser', JSON.stringify(user));

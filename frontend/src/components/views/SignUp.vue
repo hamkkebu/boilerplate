@@ -12,18 +12,18 @@
           <h3 class="section-title">기본 정보</h3>
 
           <div class="input-group">
-            <label :for="'sampleId'" class="input-label">아이디 *</label>
+            <label :for="'username'" class="input-label">아이디 *</label>
             <div class="input-wrapper">
               <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>
               <input
-                id="sampleId"
+                id="username"
                 type="text"
                 :class="['input-field', { 'error': idChecked && idDuplicate, 'success': idChecked && !idDuplicate }]"
                 placeholder="사용할 아이디를 입력하세요"
-                v-model="dict_columns.sampleId"
+                v-model="dict_columns.username"
                 @blur="checkIdDuplicate"
                 @input="resetIdCheck"
                 required
@@ -35,32 +35,32 @@
 
           <div class="input-row">
             <div class="input-group">
-              <label :for="'sampleFname'" class="input-label">이름 *</label>
+              <label :for="'firstName'" class="input-label">이름 *</label>
               <input
-                id="sampleFname"
+                id="firstName"
                 type="text"
                 class="input-field"
                 placeholder="이름"
-                v-model="dict_columns.sampleFname"
+                v-model="dict_columns.firstName"
                 required
               />
             </div>
 
             <div class="input-group">
-              <label :for="'sampleLname'" class="input-label">성 *</label>
+              <label :for="'lastName'" class="input-label">성 *</label>
               <input
-                id="sampleLname"
+                id="lastName"
                 type="text"
                 class="input-field"
                 placeholder="성"
-                v-model="dict_columns.sampleLname"
+                v-model="dict_columns.lastName"
                 required
               />
             </div>
           </div>
 
           <div class="input-group">
-            <label :for="'sampleNickname'" class="input-label">닉네임 *</label>
+            <label :for="'nickname'" class="input-label">닉네임 *</label>
             <div class="input-wrapper">
               <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M5.52 19c.64-2.2 1.84-3 3.22-3h6.52c1.38 0 2.58.8 3.22 3"></path>
@@ -68,11 +68,11 @@
                 <circle cx="12" cy="12" r="10"></circle>
               </svg>
               <input
-                id="sampleNickname"
+                id="nickname"
                 type="text"
                 :class="['input-field', { 'error': nicknameChecked && nicknameDuplicate, 'success': nicknameChecked && !nicknameDuplicate }]"
                 placeholder="닉네임을 입력하세요"
-                v-model="dict_columns.sampleNickname"
+                v-model="dict_columns.nickname"
                 @blur="checkNicknameDuplicate"
                 @input="resetNicknameCheck"
                 required
@@ -83,23 +83,23 @@
           </div>
 
           <div class="input-group">
-            <label :for="'samplePassword'" class="input-label">비밀번호 *</label>
+            <label :for="'password'" class="input-label">비밀번호 *</label>
             <div class="input-wrapper">
               <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
               </svg>
               <input
-                id="samplePassword"
+                id="password"
                 type="password"
                 class="input-field"
-                placeholder="비밀번호 (8자 이상, 영문+숫자)"
-                v-model="dict_columns.samplePassword"
+                placeholder="비밀번호 (8자 이상, 영문+숫자+특수문자)"
+                v-model="dict_columns.password"
                 required
                 minlength="8"
               />
             </div>
-            <p class="input-hint">8자 이상, 영문과 숫자를 포함해야 합니다</p>
+            <p class="input-hint">8자 이상, 영문, 숫자, 특수문자를 포함해야 합니다</p>
           </div>
 
           <div class="input-group">
@@ -113,13 +113,13 @@
                 id="passwordConfirm"
                 type="password"
                 class="input-field"
-                :class="{ 'error': passwordConfirm && passwordConfirm !== dict_columns.samplePassword }"
+                :class="{ 'error': passwordConfirm && passwordConfirm !== dict_columns.password }"
                 placeholder="비밀번호를 다시 입력하세요"
                 v-model="passwordConfirm"
                 required
               />
             </div>
-            <p v-if="passwordConfirm && passwordConfirm !== dict_columns.samplePassword" class="error-message">
+            <p v-if="passwordConfirm && passwordConfirm !== dict_columns.password" class="error-message">
               비밀번호가 일치하지 않습니다
             </p>
           </div>
@@ -130,35 +130,35 @@
           <h3 class="section-title">연락처 정보</h3>
 
           <div class="input-group">
-            <label :for="'sampleEmail'" class="input-label">이메일 *</label>
+            <label :for="'email'" class="input-label">이메일 *</label>
             <div class="input-wrapper">
               <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                 <polyline points="22,6 12,13 2,6"></polyline>
               </svg>
               <input
-                id="sampleEmail"
+                id="email"
                 type="email"
                 class="input-field"
                 placeholder="example@email.com"
-                v-model="dict_columns.sampleEmail"
+                v-model="dict_columns.email"
                 required
               />
             </div>
           </div>
 
           <div class="input-group">
-            <label :for="'samplePhone'" class="input-label">전화번호 *</label>
+            <label :for="'phone'" class="input-label">전화번호 *</label>
             <div class="input-wrapper">
               <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
               </svg>
               <input
-                id="samplePhone"
+                id="phone"
                 type="tel"
                 class="input-field"
                 placeholder="010-1234-5678"
-                v-model="dict_columns.samplePhone"
+                v-model="dict_columns.phone"
                 required
               />
             </div>
@@ -170,70 +170,70 @@
           <h3 class="section-title">주소 정보</h3>
 
           <div class="input-group">
-            <label :for="'sampleCountry'" class="input-label">국가</label>
+            <label :for="'country'" class="input-label">국가</label>
             <input
-              id="sampleCountry"
+              id="country"
               type="text"
               class="input-field"
               placeholder="국가"
-              v-model="dict_columns.sampleCountry"
+              v-model="dict_columns.country"
             />
           </div>
 
           <div class="input-row">
             <div class="input-group">
-              <label :for="'sampleCity'" class="input-label">도시</label>
+              <label :for="'city'" class="input-label">도시</label>
               <input
-                id="sampleCity"
+                id="city"
                 type="text"
                 class="input-field"
                 placeholder="도시"
-                v-model="dict_columns.sampleCity"
+                v-model="dict_columns.city"
               />
             </div>
 
             <div class="input-group">
-              <label :for="'sampleState'" class="input-label">주/도</label>
+              <label :for="'state'" class="input-label">주/도</label>
               <input
-                id="sampleState"
+                id="state"
                 type="text"
                 class="input-field"
                 placeholder="주/도"
-                v-model="dict_columns.sampleState"
+                v-model="dict_columns.state"
               />
             </div>
           </div>
 
           <div class="input-group">
-            <label :for="'sampleStreet1'" class="input-label">주소 1</label>
+            <label :for="'street1'" class="input-label">주소 1</label>
             <input
-              id="sampleStreet1"
+              id="street1"
               type="text"
               class="input-field"
               placeholder="상세 주소"
-              v-model="dict_columns.sampleStreet1"
+              v-model="dict_columns.street1"
             />
           </div>
 
           <div class="input-group">
-            <label :for="'sampleStreet2'" class="input-label">주소 2</label>
+            <label :for="'street2'" class="input-label">주소 2</label>
             <input
-              id="sampleStreet2"
+              id="street2"
               type="text"
               class="input-field"
               placeholder="상세 주소 (선택사항)"
-              v-model="dict_columns.sampleStreet2"
+              v-model="dict_columns.street2"
             />
           </div>
 
           <div class="input-group">
-            <label :for="'sampleZip'" class="input-label">우편번호</label>
+            <label :for="'zip'" class="input-label">우편번호</label>
             <input
-              id="sampleZip"
+              id="zip"
               type="text"
               class="input-field"
               placeholder="우편번호"
-              v-model="dict_columns.sampleZip"
+              v-model="dict_columns.zip"
             />
           </div>
         </div>
@@ -271,33 +271,34 @@ export default defineComponent({
     const nicknameDuplicate = ref(false);
 
     const formData = reactive<CreateSampleRequest>({
-      sampleId: '',
-      sampleFname: '',
-      sampleLname: '',
-      samplePassword: '',
-      sampleNickname: '',
-      sampleEmail: '',
-      samplePhone: '',
-      sampleCountry: '',
-      sampleCity: '',
-      sampleState: '',
-      sampleStreet1: '',
-      sampleStreet2: '',
-      sampleZip: '',
+      username: '',
+      firstName: '',
+      lastName: '',
+      password: '',
+      nickname: '',
+      email: '',
+      phone: '',
+      country: '',
+      city: '',
+      state: '',
+      street1: '',
+      street2: '',
+      zip: '',
     });
 
     // 아이디 중복 확인
     const checkIdDuplicate = async () => {
-      if (!formData.sampleId || formData.sampleId.trim().length < 3) {
+      if (!formData.username || formData.username.trim().length < 3) {
         idChecked.value = false;
         return;
       }
 
       try {
         const response = await apiClient.get(
-          API_ENDPOINTS.SAMPLE_CHECK_DUPLICATE(formData.sampleId)
+          API_ENDPOINTS.SAMPLE_CHECK_DUPLICATE(formData.username)
         );
-        idDuplicate.value = response.data.data;
+        // DuplicateCheckResponse: { exists, available, value }
+        idDuplicate.value = response.data.data.exists;
         idChecked.value = true;
       } catch (error) {
         console.error('아이디 중복 확인 중 오류 발생:', error);
@@ -313,16 +314,17 @@ export default defineComponent({
 
     // 닉네임 중복 확인
     const checkNicknameDuplicate = async () => {
-      if (!formData.sampleNickname || formData.sampleNickname.trim().length < 2) {
+      if (!formData.nickname || formData.nickname.trim().length < 2) {
         nicknameChecked.value = false;
         return;
       }
 
       try {
         const response = await apiClient.get(
-          API_ENDPOINTS.SAMPLE_CHECK_NICKNAME_DUPLICATE(formData.sampleNickname)
+          API_ENDPOINTS.SAMPLE_CHECK_NICKNAME_DUPLICATE(formData.nickname)
         );
-        nicknameDuplicate.value = response.data.data;
+        // DuplicateCheckResponse: { exists, available, value }
+        nicknameDuplicate.value = response.data.data.exists;
         nicknameChecked.value = true;
       } catch (error) {
         console.error('닉네임 중복 확인 중 오류 발생:', error);
@@ -362,15 +364,15 @@ export default defineComponent({
       }
 
       // 비밀번호 확인 검증
-      if (formData.samplePassword !== passwordConfirm.value) {
+      if (formData.password !== passwordConfirm.value) {
         alert('비밀번호가 일치하지 않습니다.');
         return;
       }
 
-      // 비밀번호 강도 검증 (8자 이상, 영문+숫자)
-      const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d).{8,}$/;
-      if (!passwordRegex.test(formData.samplePassword)) {
-        alert('비밀번호는 8자 이상이며 영문자와 숫자를 포함해야 합니다.');
+      // 비밀번호 강도 검증 (8자 이상, 영문+숫자+특수문자)
+      const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
+      if (!passwordRegex.test(formData.password)) {
+        alert('비밀번호는 8자 이상이며 영문자, 숫자, 특수문자를 포함해야 합니다.');
         return;
       }
 

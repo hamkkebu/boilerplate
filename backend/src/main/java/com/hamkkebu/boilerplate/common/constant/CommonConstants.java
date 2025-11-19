@@ -163,13 +163,21 @@ public class CommonConstants {
 
     /**
      * 비밀번호 최소 길이
+     * SECURITY: 8자 이상 (영문+숫자+특수문자 필수)
      */
     public static final int PASSWORD_MIN_LENGTH = 8;
 
     /**
      * 비밀번호 최대 길이
      */
-    public static final int PASSWORD_MAX_LENGTH = 50;
+    public static final int PASSWORD_MAX_LENGTH = 100;
+
+    /**
+     * 비밀번호 정규식
+     * SECURITY: 8자 이상, 영문자+숫자+특수문자 필수
+     * 허용 특수문자: !@#$%^&*()_+\-=[\]{};':"\\|,.<>/?
+     */
+    public static final String PASSWORD_REGEX = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]).{8,}$";
 
     /**
      * 사용자명 최소 길이

@@ -44,7 +44,9 @@ spring:
 
       # JSON Deserializer 설정
       properties:
-        spring.json.trusted.packages: "*"
+        # SECURITY: "*" 사용 시 Insecure Deserialization 취약점 발생
+        # 신뢰할 수 있는 패키지만 명시적으로 지정
+        spring.json.trusted.packages: "com.hamkkebu.boilerplate.*"
         spring.json.value.default.type: com.hamkkebu.boilerplate.data.event.BaseEvent
 
     # Listener 설정

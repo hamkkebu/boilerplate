@@ -1,5 +1,6 @@
 package com.hamkkebu.boilerplate.common.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedBy;
@@ -62,6 +63,7 @@ public abstract class BaseEntity {
      * <p>엔티티를 생성한 사용자의 ID를 저장합니다.</p>
      * <p>AuditorAware를 통해 자동으로 설정됩니다.</p>
      */
+    @JsonIgnore
     @CreatedBy
     @Column(name = "created_by", updatable = false, length = 50)
     private String createdBy;
@@ -71,6 +73,7 @@ public abstract class BaseEntity {
      * <p>엔티티를 마지막으로 수정한 사용자의 ID를 저장합니다.</p>
      * <p>AuditorAware를 통해 자동으로 설정됩니다.</p>
      */
+    @JsonIgnore
     @LastModifiedBy
     @Column(name = "updated_by", length = 50)
     private String updatedBy;
@@ -80,13 +83,15 @@ public abstract class BaseEntity {
      * <p>true: 삭제됨, false: 활성 상태</p>
      * <p>물리적 삭제 대신 논리적 삭제를 위해 사용됩니다.</p>
      */
-    @Column(name = "deleted", nullable = false)
-    private Boolean deleted = false;
+    @JsonIgnore
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted = false;
 
     /**
      * 삭제 일시
      * <p>엔티티가 삭제된 시각을 기록합니다.</p>
      */
+    @JsonIgnore
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
@@ -94,19 +99,19 @@ public abstract class BaseEntity {
 
     /**
      * 엔티티를 논리적으로 삭제합니다.
-     * <p>deleted 플래그를 true로 설정하고, deletedAt에 현재 시각을 기록합니다.</p>
+     * <p>isDeleted 플래그를 true로 설정하고, deletedAt에 현재 시각을 기록합니다.</p>
      */
     public void delete() {
-        this.deleted = true;
+        this.isDeleted = true;
         this.deletedAt = LocalDateTime.now();
     }
 
     /**
      * 삭제된 엔티티를 복구합니다.
-     * <p>deleted 플래그를 false로 설정하고, deletedAt을 null로 초기화합니다.</p>
+     * <p>isDeleted 플래그를 false로 설정하고, deletedAt을 null로 초기화합니다.</p>
      */
     public void restore() {
-        this.deleted = false;
+        this.isDeleted = false;
         this.deletedAt = null;
     }
 
@@ -116,7 +121,7 @@ public abstract class BaseEntity {
      * @return 삭제되었으면 true, 아니면 false
      */
     public boolean isDeleted() {
-        return Boolean.TRUE.equals(deleted);
+        return Boolean.TRUE.equals(isDeleted);
     }
 
     /**
@@ -132,12 +137,12 @@ public abstract class BaseEntity {
 
     /**
      * 엔티티가 저장되기 전에 호출됩니다.
-     * <p>deleted 플래그가 null인 경우 false로 초기화합니다.</p>
+     * <p>isDeleted 플래그가 null인 경우 false로 초기화합니다.</p>
      */
     @PrePersist
     protected void onCreate() {
-        if (deleted == null) {
-            deleted = false;
+        if (isDeleted == null) {
+            isDeleted = false;
         }
     }
 

@@ -1,155 +1,176 @@
 package com.hamkkebu.boilerplate.controller;
 
+import com.hamkkebu.boilerplate.common.dto.ApiResponse;
+import com.hamkkebu.boilerplate.data.dto.EventPublishResponse;
+import com.hamkkebu.boilerplate.data.dto.PublishLedgerEventRequest;
+import com.hamkkebu.boilerplate.data.dto.PublishTransactionEventRequest;
+import com.hamkkebu.boilerplate.data.dto.PublishUserEventRequest;
 import com.hamkkebu.boilerplate.data.event.*;
-import com.hamkkebu.boilerplate.publisher.EventPublisher;
+import com.hamkkebu.boilerplate.publisher.OutboxEventPublisher;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 /**
  * 이벤트 발행 예제 컨트롤러
  *
  * <p>이 컨트롤러는 Zero-Payload Kafka 이벤트 발행 예제를 제공합니다.</p>
  * <p>실제 프로덕션에서는 비즈니스 로직 내에서 이벤트를 발행해야 합니다.</p>
+ *
+ * <p>RBAC SECURITY: 이 API는 DEVELOPER 권한이 있는 사용자만 접근 가능합니다.</p>
+ * <p>개발/테스트용 API이므로 일반 사용자의 접근을 제한합니다.</p>
  */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/events/examples")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ROLE_DEVELOPER')")
+@Tag(name = "Event Examples", description = "이벤트 발행 예제 API (DEVELOPER 전용)")
 public class EventExampleController {
 
-    private final EventPublisher eventPublisher;
+    private final OutboxEventPublisher outboxEventPublisher;
 
     /**
-     * 사용자 생성 이벤트 발행 예제
-     *
-     * POST /api/v1/events/examples/user-created?userId=user-123
+     * 사용자 생성 이벤트 발행 예제 (Transactional Outbox 패턴)
      */
+    @Operation(summary = "사용자 생성 이벤트 발행", description = "UserCreatedEvent를 Outbox 테이블에 저장합니다 (개발/테스트용)")
     @PostMapping("/user-created")
-    public ResponseEntity<Map<String, String>> publishUserCreatedEvent(
-        @RequestParam String userId
+    @Transactional
+    public ApiResponse<EventPublishResponse> publishUserCreatedEvent(
+        @Valid @RequestBody PublishUserEventRequest request
     ) {
-        log.info("Publishing UserCreatedEvent for userId={}", userId);
+        log.info("Publishing UserCreatedEvent for userId={}", request.getUserId());
 
-        // 방법 1: Builder 패턴
+        // 이벤트 생성
         UserCreatedEvent event = UserCreatedEvent.builder()
-            .userId(userId)
-            .metadata("{\"source\": \"web\", \"ipAddress\": \"127.0.0.1\"}")
+            .userId(request.getUserId())
+            .metadata(request.getMetadata() != null ? request.getMetadata() : "{\"source\": \"api\"}")
             .build();
 
-        // 이벤트 발행 (비동기)
-        eventPublisher.publish("user.events", event);
+        // 이벤트 발행 (Outbox 패턴 - DB에 먼저 저장)
+        outboxEventPublisher.publish("user.events", event);
 
-        return ResponseEntity.ok(Map.of(
-            "message", "UserCreatedEvent published successfully",
-            "eventId", event.getEventId(),
-            "userId", userId
-        ));
+        EventPublishResponse response = new EventPublishResponse(
+            event.getEventId(),
+            request.getUserId(),
+            "user.events"
+        );
+
+        return ApiResponse.success(response, "UserCreatedEvent가 Outbox에 저장되었습니다 (Scheduler가 Kafka로 발행 예정)");
     }
 
     /**
-     * 가계부 생성 이벤트 발행 예제
-     *
-     * POST /api/v1/events/examples/ledger-created?ledgerId=ledger-123&userId=user-123
+     * 가계부 생성 이벤트 발행 예제 (Transactional Outbox 패턴)
      */
+    @Operation(summary = "가계부 생성 이벤트 발행", description = "LedgerCreatedEvent를 Outbox 테이블에 저장합니다 (개발/테스트용)")
     @PostMapping("/ledger-created")
-    public ResponseEntity<Map<String, String>> publishLedgerCreatedEvent(
-        @RequestParam String ledgerId,
-        @RequestParam String userId
+    @Transactional
+    public ApiResponse<EventPublishResponse> publishLedgerCreatedEvent(
+        @Valid @RequestBody PublishLedgerEventRequest request
     ) {
-        log.info("Publishing LedgerCreatedEvent for ledgerId={}, userId={}", ledgerId, userId);
+        log.info("Publishing LedgerCreatedEvent for ledgerId={}, userId={}", request.getLedgerId(), request.getUserId());
 
-        // 방법 2: 간단한 생성자
-        LedgerCreatedEvent event = new LedgerCreatedEvent(ledgerId, userId);
+        // 이벤트 생성
+        LedgerCreatedEvent event = new LedgerCreatedEvent(request.getLedgerId(), request.getUserId());
 
-        // 이벤트 발행
-        eventPublisher.publish("ledger.events", event);
+        // 이벤트 발행 (Outbox 패턴)
+        outboxEventPublisher.publish("ledger.events", event);
 
-        return ResponseEntity.ok(Map.of(
-            "message", "LedgerCreatedEvent published successfully",
-            "eventId", event.getEventId(),
-            "ledgerId", ledgerId,
-            "userId", userId
-        ));
+        EventPublishResponse response = new EventPublishResponse(
+            event.getEventId(),
+            request.getLedgerId(),
+            "ledger.events"
+        );
+
+        return ApiResponse.success(response, "LedgerCreatedEvent가 Outbox에 저장되었습니다");
     }
 
     /**
-     * 거래 생성 이벤트 발행 예제
-     *
-     * POST /api/v1/events/examples/transaction-created
-     * Body: {"transactionId": "tx-123", "userId": "user-123", "ledgerId": "ledger-123"}
+     * 거래 생성 이벤트 발행 예제 (Transactional Outbox 패턴)
      */
+    @Operation(summary = "거래 생성 이벤트 발행", description = "TransactionCreatedEvent를 Outbox 테이블에 저장합니다 (개발/테스트용)")
     @PostMapping("/transaction-created")
-    public ResponseEntity<Map<String, String>> publishTransactionCreatedEvent(
-        @RequestBody Map<String, String> request
+    @Transactional
+    public ApiResponse<EventPublishResponse> publishTransactionCreatedEvent(
+        @Valid @RequestBody PublishTransactionEventRequest request
     ) {
-        String transactionId = request.get("transactionId");
-        String userId = request.get("userId");
-        String ledgerId = request.get("ledgerId");
-
         log.info("Publishing TransactionCreatedEvent for transactionId={}, userId={}, ledgerId={}",
-            transactionId, userId, ledgerId);
+            request.getTransactionId(), request.getUserId(), request.getLedgerId());
 
         TransactionCreatedEvent event = TransactionCreatedEvent.builder()
-            .transactionId(transactionId)
-            .userId(userId)
-            .ledgerId(ledgerId)
+            .transactionId(request.getTransactionId())
+            .userId(request.getUserId())
+            .ledgerId(request.getLedgerId())
             .build();
 
-        // 동기 발행 예제 (발행 완료를 기다림)
-        eventPublisher.publishSync("transaction.events", event);
+        // Outbox 패턴으로 발행
+        outboxEventPublisher.publish("transaction.events", event);
 
-        return ResponseEntity.ok(Map.of(
-            "message", "TransactionCreatedEvent published successfully (sync)",
-            "eventId", event.getEventId(),
-            "transactionId", transactionId
-        ));
+        EventPublishResponse response = new EventPublishResponse(
+            event.getEventId(),
+            request.getTransactionId(),
+            "transaction.events"
+        );
+
+        return ApiResponse.success(response, "TransactionCreatedEvent가 Outbox에 저장되었습니다");
     }
 
     /**
-     * 거래 수정 이벤트 발행 예제
+     * 거래 수정 이벤트 발행 예제 (Transactional Outbox 패턴)
      */
+    @Operation(summary = "거래 수정 이벤트 발행", description = "TransactionUpdatedEvent를 Outbox 테이블에 저장합니다 (개발/테스트용)")
     @PostMapping("/transaction-updated")
-    public ResponseEntity<Map<String, String>> publishTransactionUpdatedEvent(
-        @RequestBody Map<String, String> request
+    @Transactional
+    public ApiResponse<EventPublishResponse> publishTransactionUpdatedEvent(
+        @Valid @RequestBody PublishTransactionEventRequest request
     ) {
-        String transactionId = request.get("transactionId");
-        String userId = request.get("userId");
-        String ledgerId = request.get("ledgerId");
+        log.info("Publishing TransactionUpdatedEvent for transactionId={}", request.getTransactionId());
 
-        log.info("Publishing TransactionUpdatedEvent for transactionId={}", transactionId);
+        TransactionUpdatedEvent event = new TransactionUpdatedEvent(
+            request.getTransactionId(),
+            request.getUserId(),
+            request.getLedgerId()
+        );
+        outboxEventPublisher.publish("transaction.events", event);
 
-        TransactionUpdatedEvent event = new TransactionUpdatedEvent(transactionId, userId, ledgerId);
-        eventPublisher.publish("transaction.events", event);
+        EventPublishResponse response = new EventPublishResponse(
+            event.getEventId(),
+            request.getTransactionId(),
+            "transaction.events"
+        );
 
-        return ResponseEntity.ok(Map.of(
-            "message", "TransactionUpdatedEvent published successfully",
-            "eventId", event.getEventId()
-        ));
+        return ApiResponse.success(response, "TransactionUpdatedEvent가 Outbox에 저장되었습니다");
     }
 
     /**
-     * 거래 삭제 이벤트 발행 예제
+     * 거래 삭제 이벤트 발행 예제 (Transactional Outbox 패턴)
      */
+    @Operation(summary = "거래 삭제 이벤트 발행", description = "TransactionDeletedEvent를 Outbox 테이블에 저장합니다 (개발/테스트용)")
     @PostMapping("/transaction-deleted")
-    public ResponseEntity<Map<String, String>> publishTransactionDeletedEvent(
-        @RequestBody Map<String, String> request
+    @Transactional
+    public ApiResponse<EventPublishResponse> publishTransactionDeletedEvent(
+        @Valid @RequestBody PublishTransactionEventRequest request
     ) {
-        String transactionId = request.get("transactionId");
-        String userId = request.get("userId");
-        String ledgerId = request.get("ledgerId");
+        log.info("Publishing TransactionDeletedEvent for transactionId={}", request.getTransactionId());
 
-        log.info("Publishing TransactionDeletedEvent for transactionId={}", transactionId);
+        TransactionDeletedEvent event = new TransactionDeletedEvent(
+            request.getTransactionId(),
+            request.getUserId(),
+            request.getLedgerId()
+        );
+        outboxEventPublisher.publish("transaction.events", event);
 
-        TransactionDeletedEvent event = new TransactionDeletedEvent(transactionId, userId, ledgerId);
-        eventPublisher.publish("transaction.events", event);
+        EventPublishResponse response = new EventPublishResponse(
+            event.getEventId(),
+            request.getTransactionId(),
+            "transaction.events"
+        );
 
-        return ResponseEntity.ok(Map.of(
-            "message", "TransactionDeletedEvent published successfully",
-            "eventId", event.getEventId()
-        ));
+        return ApiResponse.success(response, "TransactionDeletedEvent가 Outbox에 저장되었습니다");
     }
 }

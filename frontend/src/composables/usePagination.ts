@@ -58,7 +58,7 @@ export function usePagination<T>(initialPageSize = 20) {
   const updateFromResponse = (response: PageResponse<T>) => {
     totalPages.value = response.totalPages;
     totalElements.value = response.totalElements;
-    currentPage.value = response.number;
+    currentPage.value = response.page;  // ✅ number → page로 수정 (Backend와 일치)
   };
 
   /**

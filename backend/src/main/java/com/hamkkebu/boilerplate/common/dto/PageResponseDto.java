@@ -19,8 +19,8 @@ import java.util.List;
  *   "size": 20,                 // 페이지 크기
  *   "totalElements": 100,       // 전체 데이터 개수
  *   "totalPages": 5,            // 전체 페이지 수
- *   "first": true,              // 첫 페이지 여부
- *   "last": false,              // 마지막 페이지 여부
+ *   "isFirst": true,            // 첫 페이지 여부
+ *   "isLast": false,            // 마지막 페이지 여부
  *   "hasNext": true,            // 다음 페이지 존재 여부
  *   "hasPrevious": false        // 이전 페이지 존재 여부
  * }
@@ -72,12 +72,12 @@ public class PageResponseDto<T> {
     /**
      * 첫 페이지 여부
      */
-    private boolean first;
+    private boolean isFirst;
 
     /**
      * 마지막 페이지 여부
      */
-    private boolean last;
+    private boolean isLast;
 
     /**
      * 다음 페이지 존재 여부
@@ -97,7 +97,7 @@ public class PageResponseDto<T> {
     /**
      * 빈 페이지 여부
      */
-    private boolean empty;
+    private boolean isEmpty;
 
     /**
      * Spring Data Page 객체로부터 PageResponseDto 생성
@@ -109,12 +109,12 @@ public class PageResponseDto<T> {
             .size(page.getSize())
             .totalElements(page.getTotalElements())
             .totalPages(page.getTotalPages())
-            .first(page.isFirst())
-            .last(page.isLast())
+            .isFirst(page.isFirst())
+            .isLast(page.isLast())
             .hasNext(page.hasNext())
             .hasPrevious(page.hasPrevious())
             .numberOfElements(page.getNumberOfElements())
-            .empty(page.isEmpty())
+            .isEmpty(page.isEmpty())
             .build();
     }
 
@@ -139,12 +139,12 @@ public class PageResponseDto<T> {
             .size(page.getSize())
             .totalElements(page.getTotalElements())
             .totalPages(page.getTotalPages())
-            .first(page.isFirst())
-            .last(page.isLast())
+            .isFirst(page.isFirst())
+            .isLast(page.isLast())
             .hasNext(page.hasNext())
             .hasPrevious(page.hasPrevious())
             .numberOfElements(page.getNumberOfElements())
-            .empty(page.isEmpty())
+            .isEmpty(page.isEmpty())
             .build();
     }
 
@@ -158,12 +158,12 @@ public class PageResponseDto<T> {
             .size(0)
             .totalElements(0)
             .totalPages(0)
-            .first(true)
-            .last(true)
+            .isFirst(true)
+            .isLast(true)
             .hasNext(false)
             .hasPrevious(false)
             .numberOfElements(0)
-            .empty(true)
+            .isEmpty(true)
             .build();
     }
 
@@ -179,12 +179,12 @@ public class PageResponseDto<T> {
             .size(size)
             .totalElements(totalElements)
             .totalPages(totalPages)
-            .first(page == 0)
-            .last(page >= totalPages - 1)
+            .isFirst(page == 0)
+            .isLast(page >= totalPages - 1)
             .hasNext(page < totalPages - 1)
             .hasPrevious(page > 0)
             .numberOfElements(content.size())
-            .empty(content.isEmpty())
+            .isEmpty(content.isEmpty())
             .build();
     }
 }

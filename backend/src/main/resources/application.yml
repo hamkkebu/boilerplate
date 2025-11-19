@@ -2,21 +2,43 @@ server:
   port: 8080
 
 spring:
+  # 기본 프로파일 설정 (명시적으로 지정하지 않으면 dev 사용)
+  profiles:
+    default: dev
+
   datasource:
-    url: jdbc:mysql://localhost:3306/
-    username: root
-    password: root
+    url: ${DB_URL:jdbc:mysql://localhost:3306/}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+
+    # HikariCP Connection Pool 설정
+    hikari:
+      # 최대 커넥션 수 (프로덕션 권장: CPU 코어 수 * 2 + effective_spindle_count)
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:20}
+      # 최소 유휴 커넥션 수
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      # 커넥션 타임아웃 (30초)
+      connection-timeout: ${DB_POOL_CONNECTION_TIMEOUT:30000}
+      # 유휴 커넥션 타임아웃 (10분)
+      idle-timeout: ${DB_POOL_IDLE_TIMEOUT:600000}
+      # 커넥션 최대 수명 (30분)
+      max-lifetime: ${DB_POOL_MAX_LIFETIME:1800000}
+      # 커넥션 누수 감지 임계값 (60초)
+      leak-detection-threshold: ${DB_POOL_LEAK_DETECTION:60000}
+      # 커넥션 테스트 쿼리
+      connection-test-query: SELECT 1
+
   jpa:
-    show-sql: true
     hibernate:
       ddl-auto: none
-  sql:
-    init:
-      mode: always
+
+  # Transaction 타임아웃 설정 (30초)
+  transaction:
+    default-timeout: ${TRANSACTION_TIMEOUT:30}
 
   # Kafka 설정
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -30,15 +52,16 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       auto-offset-reset: earliest
       properties:
-        spring.json.trusted.packages: "*"
+        # SECURITY: "*" 사용 시 Insecure Deserialization 취약점 발생
+        spring.json.trusted.packages: "com.hamkkebu.boilerplate.*"
 
   # Redis 설정
   data:
     redis:
-      host: localhost
-      port: 6379
-      password:  # 비밀번호가 없으면 비워둠
-      timeout: 2000ms
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}  # 비밀번호가 없으면 비워둠
+      timeout: ${REDIS_TIMEOUT:2000ms}
       lettuce:
         pool:
           max-active: 8
@@ -47,17 +70,27 @@ spring:
 
 # JWT 설정
 jwt:
-  secret: your-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm-please-change-this-in-production
-  access-token-validity: 3600000    # 1시간 (밀리초)
-  refresh-token-validity: 604800000  # 7일 (밀리초)
+  secret: ${JWT_SECRET}  # REQUIRED: 환경 변수로 반드시 설정해야 함 (256-bit 이상)
+  access-token-validity: ${JWT_ACCESS_TOKEN_VALIDITY:3600000}    # 1시간 (밀리초)
+  refresh-token-validity: ${JWT_REFRESH_TOKEN_VALIDITY:604800000}  # 7일 (밀리초)
 
-logging:
-  level:
-    com.hamkkebu.boilerplate: INFO
-    org.apache.kafka: WARN
-    org.springframework.kafka: WARN
+# Security 설정
+security:
+  rate-limiting:
+    # SECURITY: 프록시 사용 여부
+    # false: getRemoteAddr() 직접 사용 (기본값, 안전)
+    # true: X-Forwarded-For 헤더 확인 (프록시 환경)
+    trust-proxy: false
 
-# Swagger UI 설정
+  login-attempt:
+    # 최대 로그인 시도 횟수
+    max-attempts: ${LOGIN_MAX_ATTEMPTS:5}
+    # 계정 잠금 시간 (분)
+    block-duration-minutes: ${LOGIN_BLOCK_DURATION:15}
+    # 로그인 시도 카운터 초기화 시간 (분)
+    attempt-reset-minutes: ${LOGIN_ATTEMPT_RESET:15}
+
+# Swagger UI 공통 설정
 springdoc:
   api-docs:
     path: /v3/api-docs

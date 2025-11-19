@@ -89,26 +89,22 @@ export default defineComponent({
       // 로그인 API 호출 (비밀번호 검증 포함)
       const data = await execute(() =>
         apiClient.post(API_ENDPOINTS.AUTH.LOGIN, {
-          sampleId: user_id.value,
+          username: user_id.value,
           password: user_pw.value,
         })
       );
 
       if (data) {
-        // Refresh Token 저장
-        if (data.token.refreshToken) {
-          localStorage.setItem('refreshToken', data.token.refreshToken);
-        }
-
-        // 인증 정보 저장 (액세스 토큰 포함)
+        // 인증 정보 저장 (액세스 토큰 + 리프레시 토큰 포함)
         login(
           {
-            sampleId: data.sampleId,
-            sampleFname: data.sampleFname,
-            sampleLname: data.sampleLname,
-            sampleEmail: data.sampleEmail,
+            username: data.username,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email ?? undefined,
           },
-          data.token.accessToken
+          data.token.accessToken,
+          data.token.refreshToken
         );
 
         // 사용자 정보 페이지로 이동

@@ -34,34 +34,24 @@ export interface PageRequest {
 
 /**
  * 페이지 응답 DTO
+ *
+ * Backend PageResponseDto와 일치하도록 수정됨
+ * - pageable, sort 객체 제거 (Backend에서 제공하지 않음)
+ * - number → page로 변경
+ * - hasNext, hasPrevious 추가 (편리한 페이지네이션 처리)
  */
 export interface PageResponse<T> {
   content: T[];
-  pageable: {
-    pageNumber: number;
-    pageSize: number;
-    sort: {
-      sorted: boolean;
-      unsorted: boolean;
-      empty: boolean;
-    };
-    offset: number;
-    paged: boolean;
-    unpaged: boolean;
-  };
-  totalPages: number;
-  totalElements: number;
-  last: boolean;
-  size: number;
-  number: number;
-  sort: {
-    sorted: boolean;
-    unsorted: boolean;
-    empty: boolean;
-  };
-  numberOfElements: number;
-  first: boolean;
-  empty: boolean;
+  page: number;              // 현재 페이지 번호 (0부터 시작)
+  size: number;              // 페이지 크기
+  totalElements: number;     // 전체 데이터 개수
+  totalPages: number;        // 전체 페이지 수
+  first: boolean;            // 첫 페이지 여부
+  last: boolean;             // 마지막 페이지 여부
+  hasNext: boolean;          // 다음 페이지 존재 여부
+  hasPrevious: boolean;      // 이전 페이지 존재 여부
+  numberOfElements: number;  // 현재 페이지의 데이터 개수
+  empty: boolean;            // 빈 페이지 여부
 }
 
 /**

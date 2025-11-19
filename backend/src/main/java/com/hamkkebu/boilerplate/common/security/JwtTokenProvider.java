@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * JWT 토큰 생성 및 검증을 담당하는 Provider
@@ -27,6 +28,9 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
+    private static final String BEARER_PREFIX = "Bearer ";
+    private static final int BEARER_PREFIX_LENGTH = BEARER_PREFIX.length();
+
     @Value("${jwt.secret}")
     private String secretKey;
 
@@ -39,50 +43,94 @@ public class JwtTokenProvider {
     private SecretKey key;
 
     /**
-     * SecretKey 초기화
+     * SecretKey 초기화 및 검증
+     *
+     * SECURITY: JWT Secret 길이 검증 (최소 256-bit / 32 bytes)
      */
     @PostConstruct
     protected void init() {
-        this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
-        log.info("JWT SecretKey initialized");
+        byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
+
+        // SECURITY: Secret 길이 검증 (최소 256-bit = 32 bytes)
+        if (keyBytes.length < 32) {
+            String errorMsg = String.format(
+                "JWT_SECRET must be at least 256 bits (32 bytes). " +
+                "Current length: %d bytes. " +
+                "Please use a stronger secret key. " +
+                "Generate one with: openssl rand -base64 32",
+                keyBytes.length
+            );
+            log.error(errorMsg);
+            throw new IllegalStateException(errorMsg);
+        }
+
+        this.key = Keys.hmacShaKeyFor(keyBytes);
+        log.info("JWT SecretKey initialized successfully (length: {} bytes)", keyBytes.length);
+
+        // WARNING: Production에서는 절대 secret을 로그에 출력하지 마세요!
+        // 개발 환경에서만 secret 앞 4자리로 확인 (디버깅용)
+        if (log.isDebugEnabled()) {
+            log.debug("JWT Secret (first 4 chars): {}****", secretKey.substring(0, Math.min(4, secretKey.length())));
+        }
     }
 
     /**
      * 액세스 토큰 생성
      *
      * @param userId 사용자 ID
+     * @param role 사용자 권한 (RBAC)
      * @return JWT 액세스 토큰
      */
-    public String createAccessToken(String userId) {
-        return createToken(userId, accessTokenValidity);
+    public String createAccessToken(String userId, String role) {
+        return createToken(userId, role, accessTokenValidity);
     }
 
     /**
      * 리프레시 토큰 생성
      *
      * @param userId 사용자 ID
+     * @param role 사용자 권한 (RBAC)
      * @return JWT 리프레시 토큰
      */
-    public String createRefreshToken(String userId) {
-        return createToken(userId, refreshTokenValidity);
+    public String createRefreshToken(String userId, String role) {
+        return createToken(userId, role, refreshTokenValidity);
     }
 
     /**
      * JWT 토큰 생성
      *
+     * SECURITY 강화:
+     * - JTI (JWT ID) 추가: 개별 토큰 추적 및 무효화 가능
+     * - 알고리즘 명시 (HS512): "none" 알고리즘 공격 방지
+     * - RBAC: 사용자 권한 정보 포함
+     *
      * @param userId   사용자 ID
+     * @param role     사용자 권한 (RBAC)
      * @param validity 토큰 유효 기간 (밀리초)
      * @return JWT 토큰
      */
-    private String createToken(String userId, long validity) {
+    private String createToken(String userId, String role, long validity) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + validity);
 
+        // SECURITY: JTI (JWT ID) 생성 - 토큰 추적/무효화에 사용 가능
+        String jti = UUID.randomUUID().toString();
+
         return Jwts.builder()
+                // JTI (JWT ID) - 토큰 고유 식별자
+                .id(jti)
+                // Subject - 사용자 ID
                 .subject(userId)
+                // RBAC: 사용자 권한
+                .claim("role", role)
+                // Issued At - 발급 시간
                 .issuedAt(now)
+                // Expiration - 만료 시간
                 .expiration(expiryDate)
-                .signWith(key)
+                // SECURITY: 알고리즘 명시 (HS512)
+                // - HS512: HMAC-SHA512 (512-bit)
+                // - "none" 알고리즘 공격 방지
+                .signWith(key, Jwts.SIG.HS512)
                 .compact();
     }
 
@@ -94,6 +142,16 @@ public class JwtTokenProvider {
      */
     public String getUserId(String token) {
         return parseClaims(token).getSubject();
+    }
+
+    /**
+     * 토큰에서 사용자 권한(Role) 추출
+     *
+     * @param token JWT 토큰
+     * @return 사용자 권한 (ROLE_USER, ROLE_ADMIN, ROLE_DEVELOPER)
+     */
+    public String getRole(String token) {
+        return parseClaims(token).get("role", String.class);
     }
 
     /**
@@ -157,5 +215,33 @@ public class JwtTokenProvider {
      */
     public Date getExpirationDate(String token) {
         return parseClaims(token).getExpiration();
+    }
+
+    /**
+     * Bearer 토큰에서 JWT 토큰 추출
+     *
+     * <p>"Bearer " 접두사를 제거하고 순수 JWT 토큰만 반환합니다.</p>
+     *
+     * @param bearerToken "Bearer {token}" 형식의 토큰
+     * @return JWT 토큰 (Bearer 접두사가 없으면 null 반환)
+     */
+    public static String extractToken(String bearerToken) {
+        if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
+            return bearerToken.substring(BEARER_PREFIX_LENGTH);
+        }
+        return null;
+    }
+
+    /**
+     * Bearer 토큰 형식으로 변환
+     *
+     * @param token JWT 토큰
+     * @return "Bearer {token}" 형식의 토큰
+     */
+    public static String toBearerToken(String token) {
+        if (token == null) {
+            return null;
+        }
+        return BEARER_PREFIX + token;
     }
 }

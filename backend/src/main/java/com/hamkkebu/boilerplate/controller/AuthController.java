@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -43,7 +44,7 @@ public class AuthController {
     )
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        log.info("Login request for user: {}", request.getSampleId());
+        log.info("Login request for user: {}", request.getUsername());
         LoginResponse response = authService.login(request);
         return ApiResponse.success(response, "로그인 성공");
     }
@@ -81,14 +82,17 @@ public class AuthController {
         security = {} // 인증 불필요 (검증 대상 토큰을 직접 전달)
     )
     @GetMapping("/validate")
-    public ApiResponse<Boolean> validateToken(@RequestHeader(value = "Authorization", required = false) String token) {
+    public ApiResponse<Boolean> validateToken(@RequestHeader(value = "Authorization", required = false) String bearerToken) {
         // 토큰이 없는 경우
-        if (token == null || token.isEmpty()) {
+        if (bearerToken == null || bearerToken.isEmpty()) {
             return ApiResponse.success(false, "토큰이 제공되지 않았습니다");
         }
 
         // "Bearer " 접두사 제거
-        String jwtToken = token.startsWith("Bearer ") ? token.substring(7) : token;
+        String jwtToken = com.hamkkebu.boilerplate.common.security.JwtTokenProvider.extractToken(bearerToken);
+        if (jwtToken == null) {
+            jwtToken = bearerToken; // Bearer 없이 직접 토큰만 전달된 경우
+        }
         boolean isValid = authService.validateToken(jwtToken);
         return ApiResponse.success(isValid, isValid ? "유효한 토큰입니다" : "유효하지 않은 토큰입니다");
     }
@@ -96,38 +100,40 @@ public class AuthController {
     /**
      * 현재 사용자 정보 조회
      *
-     * @param token JWT 토큰
+     * <p>Spring Security의 인증 정보에서 현재 사용자 ID를 반환합니다.</p>
+     * <p>Swagger의 Authorize 버튼으로 설정한 JWT 토큰이 자동으로 사용됩니다.</p>
+     *
+     * @param authentication Spring Security 인증 정보
      * @return 사용자 ID
      */
     @Operation(summary = "현재 사용자 정보", description = "JWT 토큰에서 현재 사용자 정보를 조회합니다.")
     @GetMapping("/me")
-    public ApiResponse<String> getCurrentUser(@RequestHeader(value = "Authorization", required = false) String token) {
-        // 토큰이 없는 경우
-        if (token == null || token.isEmpty()) {
-            return ApiResponse.error("AUTH-402", "토큰이 제공되지 않았습니다");
-        }
-
-        // "Bearer " 접두사 제거
-        String jwtToken = token.startsWith("Bearer ") ? token.substring(7) : token;
-        String userId = authService.getUserIdFromToken(jwtToken);
+    public ApiResponse<String> getCurrentUser(Authentication authentication) {
+        String userId = authentication.getName();
         return ApiResponse.success(userId, "사용자 정보 조회 성공");
     }
 
     /**
      * 로그아웃
      *
-     * <p>refreshToken을 Redis Whitelist에서 제거합니다.</p>
+     * <p>accessToken으로 사용자를 인증하고, refreshToken을 Redis Whitelist에서 제거합니다.</p>
+     * <p>Swagger의 Authorize 버튼으로 설정한 JWT 토큰이 자동으로 사용됩니다.</p>
      *
-     * @param refreshToken 리프레시 토큰
+     * @param authentication Spring Security 인증 정보
+     * @param refreshToken 제거할 리프레시 토큰 (선택)
      * @return 로그아웃 성공 메시지
      */
     @Operation(
         summary = "로그아웃",
-        description = "로그아웃하고 refreshToken을 Whitelist에서 제거합니다."
+        description = "로그아웃하고 refreshToken을 Whitelist에서 제거합니다. Refresh-Token 헤더로 제거할 토큰을 전달합니다."
     )
     @PostMapping("/logout")
-    public ApiResponse<Void> logout(@RequestHeader(value = "Refresh-Token", required = false) String refreshToken) {
-        log.info("Logout request");
+    public ApiResponse<Void> logout(
+            Authentication authentication,
+            @RequestHeader(value = "Refresh-Token", required = false) String refreshToken
+    ) {
+        String userId = authentication.getName();
+        log.info("Logout request for user: {}", userId);
         authService.logout(refreshToken);
         return ApiResponse.success("로그아웃 성공");
     }

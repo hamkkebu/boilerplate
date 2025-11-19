@@ -40,8 +40,15 @@ dependencies {
 	// Kafka
 	implementation 'org.springframework.kafka:spring-kafka'
 
-	// Redis
+	// Redis (Rate Limiting 포함)
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	// .env 파일 로드 (로컬 개발용)
+	implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+	// Monitoring & Metrics
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
 
 	// Swagger UI (OpenAPI 3.0)
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'

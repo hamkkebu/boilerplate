@@ -1,6 +1,8 @@
 package com.hamkkebu.boilerplate.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hamkkebu.boilerplate.common.entity.BaseEntity;
+import com.hamkkebu.boilerplate.common.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,11 +28,11 @@ public class Sample extends BaseEntity {
     @Column(name = "sample_id", nullable = false)
     private String sampleId;
 
-    @Column(name = "sample_fname")
-    private String sampleFname;
+    @Column(name = "sample_first_name")
+    private String sampleFirstName;
 
-    @Column(name = "sample_lname")
-    private String sampleLname;
+    @Column(name = "sample_last_name")
+    private String sampleLastName;
 
     @Column(name = "sample_nickname")
     private String sampleNickname;
@@ -41,6 +43,7 @@ public class Sample extends BaseEntity {
     @Column(name = "sample_phone")
     private String samplePhone;
 
+    @JsonIgnore
     @Column(name = "sample_password", nullable = false)
     private String samplePassword;
 
@@ -61,4 +64,27 @@ public class Sample extends BaseEntity {
 
     @Column(name = "sample_zip")
     private String sampleZip;
+
+    /**
+     * 사용자 권한
+     * RBAC (Role-Based Access Control) 구현
+     *
+     * <p>기본값: USER</p>
+     * <p>권한 종류: USER, ADMIN, DEVELOPER</p>
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sample_role", nullable = false, length = 20)
+    @Builder.Default
+    private Role role = Role.USER;
+
+    /**
+     * 비밀번호 업데이트
+     *
+     * <p>암호화된 비밀번호로 업데이트합니다.</p>
+     *
+     * @param encodedPassword 암호화된 비밀번호
+     */
+    public void updatePassword(String encodedPassword) {
+        this.samplePassword = encodedPassword;
+    }
 }

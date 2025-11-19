@@ -7,6 +7,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -34,6 +35,12 @@ public class OpenApiConfig {
 
     private static final String SECURITY_SCHEME_NAME = "Bearer Authentication";
 
+    @Value("${server.url:http://localhost:8080}")
+    private String serverUrl;
+
+    @Value("${server.description:Local Development Server}")
+    private String serverDescription;
+
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
@@ -48,11 +55,8 @@ public class OpenApiConfig {
             )
             .servers(List.of(
                 new Server()
-                    .url("http://localhost:8080")
-                    .description("Local Development Server"),
-                new Server()
-                    .url("https://api.hamkkebu.com")
-                    .description("Production Server")
+                    .url(serverUrl)
+                    .description(serverDescription)
             ))
             // JWT Bearer Token 인증 설정
             .components(new Components()

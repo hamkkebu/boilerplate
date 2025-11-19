@@ -2,19 +2,17 @@
   <div class="userinfo-container">
     <div class="userinfo-card">
       <div class="userinfo-header">
-        <h1 class="userinfo-title">User Information</h1>
-        <p class="userinfo-subtitle">회원 정보 목록</p>
+        <h1 class="userinfo-title">My Profile</h1>
+        <p class="userinfo-subtitle">내 정보</p>
       </div>
 
       <div class="action-bar">
         <div class="user-count">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
           </svg>
-          <span>총 {{ result.length }}명의 회원</span>
+          <span>회원 정보</span>
         </div>
         <button @click="downloadExcel()" type="button" class="btn-download">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -36,11 +34,11 @@
               </svg>
             </div>
             <div class="user-basic-info">
-              <h3>{{ user.sampleFname }} {{ user.sampleLname }}</h3>
-              <p>@{{ user.sampleNickname }}</p>
+              <h3>{{ user.firstName }} {{ user.lastName }}</h3>
+              <p>@{{ user.nickname }}</p>
             </div>
             <div class="user-id-badge">
-              ID: {{ user.sampleId }}
+              ID: {{ user.username }}
             </div>
           </div>
 
@@ -53,7 +51,7 @@
                 </svg>
                 <div>
                   <span class="info-label">이메일</span>
-                  <span class="info-value">{{ user.sampleEmail || 'N/A' }}</span>
+                  <span class="info-value">{{ user.email || 'N/A' }}</span>
                 </div>
               </div>
 
@@ -63,7 +61,7 @@
                 </svg>
                 <div>
                   <span class="info-label">전화번호</span>
-                  <span class="info-value">{{ user.samplePhone || 'N/A' }}</span>
+                  <span class="info-value">{{ user.phone || 'N/A' }}</span>
                 </div>
               </div>
 
@@ -75,7 +73,7 @@
                 <div>
                   <span class="info-label">주소</span>
                   <span class="info-value">
-                    {{ [user.sampleStreet1, user.sampleStreet2, user.sampleCity, user.sampleState, user.sampleCountry, user.sampleZip].filter(Boolean).join(', ') || 'N/A' }}
+                    {{ [user.street1, user.street2, user.city, user.state, user.country, user.zip].filter(Boolean).join(', ') || 'N/A' }}
                   </span>
                 </div>
               </div>
@@ -121,6 +119,7 @@ import { defineComponent, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import * as XLSX from 'xlsx';
 import apiClient from '@/api/client';
+import { useAuth } from '@/composables/useAuth';
 import { useApi } from '@/composables/useApi';
 import { API_ENDPOINTS, ROUTES } from '@/constants';
 import { formatDate } from '@/utils/date.utils';
@@ -130,13 +129,23 @@ export default defineComponent({
   name: 'UserInfo',
   setup() {
     const router = useRouter();
-    const { loading, execute } = useApi<Sample[]>();
+    const { currentUser } = useAuth();
+    const { loading, execute } = useApi<Sample>();
     const result = ref<Sample[]>([]);
 
-    const getUserInfoAll = async () => {
-      const data = await execute(() => apiClient.get(API_ENDPOINTS.SAMPLES));
+    const getUserInfo = async () => {
+      if (!currentUser.value?.username) {
+        alert('로그인 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
+        router.push(ROUTES.LOGIN);
+        return;
+      }
+
+      const data = await execute(() =>
+        apiClient.get(API_ENDPOINTS.SAMPLE_BY_ID(currentUser.value!.username))
+      );
+
       if (data) {
-        result.value = data;
+        result.value = [data]; // 단일 사용자 정보를 배열로 변환
       }
     };
 
@@ -149,7 +158,7 @@ export default defineComponent({
       const dataWS = XLSX.utils.json_to_sheet(result.value);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, dataWS, 'Sheet1');
-      const filename = `account_info_${formatDate(new Date().toISOString(), 'YYYYMMDD_HHmmss')}.xlsx`;
+      const filename = `my_account_info_${formatDate(new Date().toISOString(), 'YYYYMMDD_HHmmss')}.xlsx`;
       XLSX.writeFile(wb, filename);
     };
 
@@ -162,13 +171,13 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      getUserInfoAll();
+      getUserInfo();
     });
 
     return {
       result,
       loading,
-      getUserInfoAll,
+      getUserInfo,
       downloadExcel,
       goToLogout,
       goToLeave,
