@@ -1,28 +1,34 @@
-# 1단계: Gradle 이미지로 빌드
+# Multi-stage build for Spring Boot application
+
+# Stage 1: Build with Gradle
 FROM gradle:8.5-jdk17 AS builder
 
 WORKDIR /app
 
-# Gradle 캐시 최적화를 위해 build.gradle과 settings.gradle을 먼저 복사
+# Copy gradle files
 COPY build.gradle settings.gradle ./
+COPY gradle ./gradle
+COPY gradlew ./
 
-# 의존성 다운로드 (캐싱 최적화)
+# Download dependencies (cache layer)
 RUN gradle dependencies --no-daemon || true
 
-# 소스 코드 복사
+# Copy source code
 COPY src ./src
 
-# clean build 실행
-RUN gradle clean build --no-daemon -x test
+# Build application (skip tests for faster build)
+RUN gradle clean bootJar --no-daemon -x test
 
-# 2단계: 실행용 경량 이미지
+# Stage 2: Runtime
 FROM amazoncorretto:17-alpine
 
 WORKDIR /app
 
-# 빌드된 JAR 파일 복사
+# Copy the built JAR from builder stage
 COPY --from=builder /app/build/libs/*.jar app.jar
 
+# Expose port
 EXPOSE 8080
 
+# Set entrypoint
 ENTRYPOINT ["java", "-jar", "app.jar"]
