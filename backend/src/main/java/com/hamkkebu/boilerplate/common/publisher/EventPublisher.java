@@ -1,4 +1,4 @@
-package com.hamkkebu.boilerplate.publisher;
+package com.hamkkebu.boilerplate.common.publisher;
 
 import com.hamkkebu.boilerplate.data.event.DomainEvent;
 import lombok.RequiredArgsConstructor;

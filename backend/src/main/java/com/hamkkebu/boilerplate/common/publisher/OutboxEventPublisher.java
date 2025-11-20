@@ -1,4 +1,4 @@
-package com.hamkkebu.boilerplate.publisher;
+package com.hamkkebu.boilerplate.common.publisher;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
