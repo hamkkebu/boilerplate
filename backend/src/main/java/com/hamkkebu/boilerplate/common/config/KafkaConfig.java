@@ -1,4 +1,4 @@
-package com.hamkkebu.boilerplate.config;
+package com.hamkkebu.boilerplate.common.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;

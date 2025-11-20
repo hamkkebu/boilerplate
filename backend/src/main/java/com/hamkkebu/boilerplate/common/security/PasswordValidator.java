@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.util.regex.Pattern;
+
 /**
  * 비밀번호 검증 유틸리티
  *
@@ -24,6 +26,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PasswordValidator {
 
+    private static final Pattern PASSWORD_PATTERN = Pattern.compile(CommonConstants.PASSWORD_REGEX);
+
     private final PasswordEncoder passwordEncoder;
 
     /**
@@ -34,12 +38,14 @@ public class PasswordValidator {
      *
      * @param rawPassword 평문 비밀번호
      * @param encodedPassword 암호화된 비밀번호
-     * @param userId 사용자 ID (로깅용)
+     * @param userId 사용자 ID (로깅용, null 가능)
      * @throws BusinessException 비밀번호가 일치하지 않는 경우
      */
     public void validatePassword(String rawPassword, String encodedPassword, String userId) {
         if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
-            log.warn("Invalid password for user: {}", userId);
+            if (userId != null) {
+                log.warn("Invalid password for user: {}", userId);
+            }
             throw new BusinessException(
                 ErrorCode.AUTHENTICATION_FAILED,
                 "비밀번호가 일치하지 않습니다"
@@ -50,19 +56,12 @@ public class PasswordValidator {
     /**
      * 비밀번호 검증 (간단한 버전)
      *
-     * <p>사용자 ID 로깅 없이 비밀번호만 검증합니다.</p>
-     *
      * @param rawPassword 평문 비밀번호
      * @param encodedPassword 암호화된 비밀번호
      * @throws BusinessException 비밀번호가 일치하지 않는 경우
      */
     public void validatePassword(String rawPassword, String encodedPassword) {
-        if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
-            throw new BusinessException(
-                ErrorCode.AUTHENTICATION_FAILED,
-                "비밀번호가 일치하지 않습니다"
-            );
-        }
+        validatePassword(rawPassword, encodedPassword, null);
     }
 
     /**
@@ -87,7 +86,7 @@ public class PasswordValidator {
             );
         }
 
-        if (!password.matches(CommonConstants.PASSWORD_REGEX)) {
+        if (!PASSWORD_PATTERN.matcher(password).matches()) {
             throw new BusinessException(
                 ErrorCode.VALIDATION_FAILED,
                 String.format("비밀번호는 %d자 이상이며 영문자, 숫자, 특수문자를 모두 포함해야 합니다",

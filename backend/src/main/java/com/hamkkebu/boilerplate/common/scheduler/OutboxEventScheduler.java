@@ -1,4 +1,4 @@
-package com.hamkkebu.boilerplate.scheduler;
+package com.hamkkebu.boilerplate.common.scheduler;
 
 import com.hamkkebu.boilerplate.common.enums.OutboxEventStatus;
 import com.hamkkebu.boilerplate.data.entity.OutboxEvent;

@@ -92,14 +92,77 @@
               <input
                 id="password"
                 type="password"
-                class="input-field"
+                :class="['input-field', {
+                  'error': dict_columns.password && passwordStrength.level === 'weak',
+                  'success': dict_columns.password && passwordStrength.level === 'strong'
+                }]"
                 placeholder="비밀번호 (8자 이상, 영문+숫자+특수문자)"
                 v-model="dict_columns.password"
                 required
                 minlength="8"
               />
             </div>
-            <p class="input-hint">8자 이상, 영문, 숫자, 특수문자를 포함해야 합니다</p>
+
+            <!-- 비밀번호 강도 표시 -->
+            <div v-if="dict_columns.password" class="password-strength-container">
+              <!-- 강도 게이지 -->
+              <div class="strength-meter">
+                <div
+                  class="strength-meter-fill"
+                  :class="[`strength-${passwordStrength.level}`]"
+                  :style="{ width: `${passwordStrength.score * 25}%` }"
+                ></div>
+              </div>
+              <div class="strength-label">
+                <span :class="[`strength-text-${passwordStrength.level}`]">
+                  {{ passwordStrength.text }}
+                </span>
+              </div>
+
+              <!-- 조건 체크리스트 -->
+              <div class="password-requirements">
+                <div class="requirement-item" :class="{ 'met': passwordValidation.hasMinLength }">
+                  <svg v-if="passwordValidation.hasMinLength" class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <svg v-else class="x-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                  <span>8자 이상</span>
+                </div>
+                <div class="requirement-item" :class="{ 'met': passwordValidation.hasLetter }">
+                  <svg v-if="passwordValidation.hasLetter" class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <svg v-else class="x-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                  <span>영문자 포함</span>
+                </div>
+                <div class="requirement-item" :class="{ 'met': passwordValidation.hasNumber }">
+                  <svg v-if="passwordValidation.hasNumber" class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <svg v-else class="x-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                  <span>숫자 포함</span>
+                </div>
+                <div class="requirement-item" :class="{ 'met': passwordValidation.hasSpecial }">
+                  <svg v-if="passwordValidation.hasSpecial" class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <svg v-else class="x-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                  <span>특수문자 포함</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="input-group">
@@ -252,7 +315,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, ref } from 'vue';
+import { defineComponent, reactive, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import apiClient from '@/api/client';
 import { useApi } from '@/composables/useApi';
@@ -284,6 +347,59 @@ export default defineComponent({
       street1: '',
       street2: '',
       zip: '',
+    });
+
+    // 비밀번호 유효성 검증 (실시간)
+    const passwordValidation = computed(() => {
+      const password = formData.password;
+      return {
+        hasMinLength: password.length >= 8,
+        hasLetter: /[a-zA-Z]/.test(password),
+        hasNumber: /\d/.test(password),
+        hasSpecial: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
+      };
+    });
+
+    // 비밀번호 강도 계산
+    const passwordStrength = computed(() => {
+      const password = formData.password;
+      if (!password) {
+        return { level: 'none', text: '', score: 0 };
+      }
+
+      const validation = passwordValidation.value;
+      let score = 0;
+
+      // 각 조건당 1점
+      if (validation.hasMinLength) score++;
+      if (validation.hasLetter) score++;
+      if (validation.hasNumber) score++;
+      if (validation.hasSpecial) score++;
+
+      // 추가 점수: 12자 이상이면 보너스
+      if (password.length >= 12) score += 0.5;
+      // 대소문자 혼합이면 보너스
+      if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 0.5;
+
+      // 점수를 4점 만점으로 정규화
+      score = Math.min(score, 4);
+
+      // 강도 레벨 결정
+      let level: 'weak' | 'medium' | 'strong';
+      let text: string;
+
+      if (score < 2) {
+        level = 'weak';
+        text = '취약';
+      } else if (score < 4) {
+        level = 'medium';
+        text = '보통';
+      } else {
+        level = 'strong';
+        text = '강력';
+      }
+
+      return { level, text, score };
     });
 
     // 아이디 중복 확인
@@ -369,10 +485,9 @@ export default defineComponent({
         return;
       }
 
-      // 비밀번호 강도 검증 (8자 이상, 영문+숫자+특수문자)
-      const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
-      if (!passwordRegex.test(formData.password)) {
-        alert('비밀번호는 8자 이상이며 영문자, 숫자, 특수문자를 포함해야 합니다.');
+      // 비밀번호 강도 검증
+      if (passwordStrength.value.score < 4) {
+        alert('비밀번호가 안전하지 않습니다. 모든 조건을 만족하는 비밀번호를 입력해주세요.');
         return;
       }
 
@@ -398,6 +513,8 @@ export default defineComponent({
       idDuplicate,
       nicknameChecked,
       nicknameDuplicate,
+      passwordValidation,
+      passwordStrength,
       loading,
       checkIdDuplicate,
       resetIdCheck,
@@ -589,6 +706,103 @@ export default defineComponent({
   font-weight: 500;
 }
 
+/* 비밀번호 강도 표시 스타일 */
+.password-strength-container {
+  margin-top: 12px;
+  padding: 16px;
+  background: #f7fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.strength-meter {
+  width: 100%;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.strength-meter-fill {
+  height: 100%;
+  transition: all 0.3s ease;
+  border-radius: 3px;
+}
+
+.strength-meter-fill.strength-weak {
+  background: linear-gradient(90deg, #f56565, #fc8181);
+}
+
+.strength-meter-fill.strength-medium {
+  background: linear-gradient(90deg, #ed8936, #f6ad55);
+}
+
+.strength-meter-fill.strength-strong {
+  background: linear-gradient(90deg, #48bb78, #68d391);
+}
+
+.strength-label {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.strength-label span {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+.strength-text-weak {
+  color: #c53030;
+  background: #fed7d7;
+}
+
+.strength-text-medium {
+  color: #c05621;
+  background: #feebc8;
+}
+
+.strength-text-strong {
+  color: #276749;
+  background: #c6f6d5;
+}
+
+.password-requirements {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.requirement-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #718096;
+  transition: all 0.2s;
+}
+
+.requirement-item.met {
+  color: #48bb78;
+}
+
+.check-icon {
+  width: 16px;
+  height: 16px;
+  color: #48bb78;
+  flex-shrink: 0;
+}
+
+.x-icon {
+  width: 16px;
+  height: 16px;
+  color: #cbd5e0;
+  flex-shrink: 0;
+}
+
 .btn-signup {
   width: 100%;
   padding: 14px;
@@ -642,6 +856,10 @@ export default defineComponent({
   }
 
   .input-row {
+    grid-template-columns: 1fr;
+  }
+
+  .password-requirements {
     grid-template-columns: 1fr;
   }
 }

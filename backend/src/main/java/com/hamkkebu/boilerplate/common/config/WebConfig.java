@@ -1,4 +1,4 @@
-package com.hamkkebu.boilerplate.config;
+package com.hamkkebu.boilerplate.common.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;

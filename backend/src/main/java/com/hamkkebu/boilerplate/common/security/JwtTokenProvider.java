@@ -1,5 +1,6 @@
 package com.hamkkebu.boilerplate.common.security;
 
+import com.hamkkebu.boilerplate.common.constant.CommonConstants;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -27,9 +28,6 @@ import java.util.UUID;
 @Slf4j
 @Component
 public class JwtTokenProvider {
-
-    private static final String BEARER_PREFIX = "Bearer ";
-    private static final int BEARER_PREFIX_LENGTH = BEARER_PREFIX.length();
 
     @Value("${jwt.secret}")
     private String secretKey;
@@ -66,12 +64,6 @@ public class JwtTokenProvider {
 
         this.key = Keys.hmacShaKeyFor(keyBytes);
         log.info("JWT SecretKey initialized successfully (length: {} bytes)", keyBytes.length);
-
-        // WARNING: Production에서는 절대 secret을 로그에 출력하지 마세요!
-        // 개발 환경에서만 secret 앞 4자리로 확인 (디버깅용)
-        if (log.isDebugEnabled()) {
-            log.debug("JWT Secret (first 4 chars): {}****", secretKey.substring(0, Math.min(4, secretKey.length())));
-        }
     }
 
     /**
@@ -226,8 +218,8 @@ public class JwtTokenProvider {
      * @return JWT 토큰 (Bearer 접두사가 없으면 null 반환)
      */
     public static String extractToken(String bearerToken) {
-        if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
-            return bearerToken.substring(BEARER_PREFIX_LENGTH);
+        if (bearerToken != null && bearerToken.startsWith(CommonConstants.TOKEN_PREFIX)) {
+            return bearerToken.substring(CommonConstants.TOKEN_PREFIX.length());
         }
         return null;
     }
@@ -242,6 +234,6 @@ public class JwtTokenProvider {
         if (token == null) {
             return null;
         }
-        return BEARER_PREFIX + token;
+        return CommonConstants.TOKEN_PREFIX + token;
     }
 }

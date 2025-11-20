@@ -81,6 +81,10 @@ security:
     # false: getRemoteAddr() 직접 사용 (기본값, 안전)
     # true: X-Forwarded-For 헤더 확인 (프록시 환경)
     trust-proxy: false
+    # Rate limiting 설정
+    auth-requests-per-minute: 30
+    general-requests-per-minute: 200
+    window-size-seconds: 60
 
   login-attempt:
     # 최대 로그인 시도 횟수
@@ -89,6 +93,62 @@ security:
     block-duration-minutes: ${LOGIN_BLOCK_DURATION:15}
     # 로그인 시도 카운터 초기화 시간 (분)
     attempt-reset-minutes: ${LOGIN_ATTEMPT_RESET:15}
+
+# gRPC 설정 (내부 서비스 간 통신)
+grpc:
+  server:
+    port: ${GRPC_SERVER_PORT:9090}
+  client:
+    user-service:
+      address: ${USER_SERVICE_GRPC_ADDRESS:static://localhost:9090}
+      negotiationType: plaintext  # 개발 환경: plaintext, 프로덕션: TLS
+      enable-keep-alive: true
+      keep-alive-time: 30s
+      keep-alive-timeout: 10s
+    transaction-service:
+      address: ${TRANSACTION_SERVICE_GRPC_ADDRESS:static://localhost:9090}
+      negotiationType: plaintext
+      enable-keep-alive: true
+      keep-alive-time: 30s
+      keep-alive-timeout: 10s
+
+# Resilience4j Circuit Breaker 설정
+resilience4j:
+  circuitbreaker:
+    instances:
+      userService:
+        # Circuit Breaker 동작 설정
+        failure-rate-threshold: 50                    # 실패율 50% 초과 시 Circuit Open
+        slow-call-rate-threshold: 50                  # 느린 호출 50% 초과 시 Circuit Open
+        slow-call-duration-threshold: 2s              # 2초 이상 걸리면 느린 호출로 간주
+        wait-duration-in-open-state: 10s              # Open 상태에서 10초 후 Half-Open으로 전환
+        permitted-number-of-calls-in-half-open-state: 3  # Half-Open 상태에서 3개 요청 허용
+        sliding-window-type: COUNT_BASED              # 카운트 기반 슬라이딩 윈도우
+        sliding-window-size: 10                       # 최근 10개 호출 기준
+        minimum-number-of-calls: 5                    # 최소 5개 호출 후 Circuit Breaker 활성화
+        automatic-transition-from-open-to-half-open-enabled: true
+        record-exceptions:
+          - io.grpc.StatusRuntimeException
+      transactionService:
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 2s
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+        record-exceptions:
+          - io.grpc.StatusRuntimeException
+
+  # Time Limiter 설정 (타임아웃)
+  timelimiter:
+    instances:
+      userService:
+        timeout-duration: 3s                          # gRPC 호출 타임아웃: 3초
+      transactionService:
+        timeout-duration: 3s
 
 # Swagger UI 공통 설정
 springdoc:

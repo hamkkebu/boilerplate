@@ -112,30 +112,40 @@ public class RateLimitingInterceptor implements HandlerInterceptor {
         }
 
         // 프록시를 신뢰하는 경우에만 X-Forwarded-For 등의 헤더 확인
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("HTTP_CLIENT_IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
+        String[] headerNames = {
+            "X-Forwarded-For",
+            "Proxy-Client-IP",
+            "WL-Proxy-Client-IP",
+            "HTTP_CLIENT_IP",
+            "HTTP_X_FORWARDED_FOR"
+        };
+
+        for (String headerName : headerNames) {
+            String ip = request.getHeader(headerName);
+            if (isValidIP(ip)) {
+                // 여러 IP가 있는 경우 첫 번째 IP 사용 (실제 클라이언트 IP)
+                if (ip.contains(",")) {
+                    ip = ip.split(",")[0].trim();
+                }
+                log.debug("Client IP (via proxy, header={}): {}", headerName, ip);
+                return ip;
+            }
         }
 
-        // 여러 IP가 있는 경우 첫 번째 IP 사용 (실제 클라이언트 IP)
-        if (ip != null && ip.contains(",")) {
-            ip = ip.split(",")[0].trim();
-        }
-
-        log.debug("Client IP (via proxy): {}", ip);
+        // 모든 헤더에서 IP를 찾지 못한 경우 getRemoteAddr() 사용
+        String ip = request.getRemoteAddr();
+        log.debug("Client IP (fallback): {}", ip);
         return ip;
+    }
+
+    /**
+     * IP 주소 유효성 검증
+     *
+     * @param ip IP 주소
+     * @return 유효하면 true
+     */
+    private boolean isValidIP(String ip) {
+        return ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip);
     }
 
     /**

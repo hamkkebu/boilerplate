@@ -2,6 +2,7 @@ package com.hamkkebu.boilerplate.common.security;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -31,10 +32,14 @@ public class RateLimitingService {
 
     private static final String RATE_LIMIT_PREFIX = "rate_limit:";
 
-    // Rate Limit 설정
-    private static final int AUTH_REQUESTS_PER_MINUTE = 5;      // 인증 API: 5 req/min
-    private static final int GENERAL_REQUESTS_PER_MINUTE = 100; // 일반 API: 100 req/min
-    private static final long WINDOW_SIZE_SECONDS = 60;          // 1분
+    @Value("${security.rate-limiting.auth-requests-per-minute:5}")
+    private int authRequestsPerMinute;
+
+    @Value("${security.rate-limiting.general-requests-per-minute:100}")
+    private int generalRequestsPerMinute;
+
+    @Value("${security.rate-limiting.window-size-seconds:60}")
+    private long windowSizeSeconds;
 
     /**
      * Rate Limit 체크 (인증 API용)
@@ -43,7 +48,7 @@ public class RateLimitingService {
      * @return 허용되면 true, 제한 초과 시 false
      */
     public boolean tryConsumeAuth(String key) {
-        return tryConsume(key, AUTH_REQUESTS_PER_MINUTE);
+        return tryConsume(key, authRequestsPerMinute);
     }
 
     /**
@@ -53,7 +58,7 @@ public class RateLimitingService {
      * @return 허용되면 true, 제한 초과 시 false
      */
     public boolean tryConsumeGeneral(String key) {
-        return tryConsume(key, GENERAL_REQUESTS_PER_MINUTE);
+        return tryConsume(key, generalRequestsPerMinute);
     }
 
     /**
@@ -85,7 +90,7 @@ public class RateLimitingService {
 
             // 2. 첫 요청이면 TTL 설정
             if (count == 1) {
-                redisTemplate.expire(redisKey, WINDOW_SIZE_SECONDS, TimeUnit.SECONDS);
+                redisTemplate.expire(redisKey, windowSizeSeconds, TimeUnit.SECONDS);
             }
 
             // 3. Limit 체크

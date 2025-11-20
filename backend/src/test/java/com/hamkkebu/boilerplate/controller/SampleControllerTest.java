@@ -223,4 +223,108 @@ class SampleControllerTest {
                     .build()
             ));
     }
+
+    @Test
+    @DisplayName("아이디 중복 확인 API - 사용 중인 아이디")
+    void checkIdDuplicate_Exists() throws Exception {
+        // given
+        String sampleId = "k1m743hyun";  // setUp에서 생성한 사용자
+
+        // when & then
+        mockMvc.perform(get("/api/v1/samples/check/{sampleId}", sampleId)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.exists").value(true))
+            .andExpect(jsonPath("$.data.available").value(false))
+            .andExpect(jsonPath("$.data.value").value(sampleId))
+            .andDo(document("sample-check-id-duplicate",
+                ResourceSnippetParameters.builder()
+                    .tag("Sample API")
+                    .summary("아이디 중복 확인")
+                    .description("사용자 ID의 중복 여부를 확인합니다.")
+                    .pathParameters(
+                        parameterWithName("sampleId").description("확인할 사용자 ID (3-20자)")
+                    )
+                    .responseSchema(schema("ApiResponse<DuplicateCheckResponse>"))
+                    .responseFields(
+                        getSuccessResponseFields(
+                            fieldWithPath("data.exists").type(BOOLEAN).description("중복 여부 (true: 사용 중, false: 사용 가능)"),
+                            fieldWithPath("data.available").type(BOOLEAN).description("사용 가능 여부 (exists의 반대)"),
+                            fieldWithPath("data.value").type(STRING).description("확인한 값")
+                        )
+                    )
+                    .build()
+            ));
+    }
+
+    @Test
+    @DisplayName("아이디 중복 확인 API - 사용 가능한 아이디")
+    void checkIdDuplicate_Available() throws Exception {
+        // given
+        String sampleId = "available_user";
+
+        // when & then
+        mockMvc.perform(get("/api/v1/samples/check/{sampleId}", sampleId)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.exists").value(false))
+            .andExpect(jsonPath("$.data.available").value(true))
+            .andExpect(jsonPath("$.data.value").value(sampleId));
+    }
+
+    @Test
+    @DisplayName("닉네임 중복 확인 API - 사용 중인 닉네임")
+    void checkNicknameDuplicate_Exists() throws Exception {
+        // given
+        String nickname = "k1m";  // setUp에서 생성한 사용자의 닉네임
+
+        // when & then
+        mockMvc.perform(get("/api/v1/samples/check/nickname/{nickname}", nickname)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.exists").value(true))
+            .andExpect(jsonPath("$.data.available").value(false))
+            .andExpect(jsonPath("$.data.value").value(nickname))
+            .andDo(document("sample-check-nickname-duplicate",
+                ResourceSnippetParameters.builder()
+                    .tag("Sample API")
+                    .summary("닉네임 중복 확인")
+                    .description("닉네임의 중복 여부를 확인합니다.")
+                    .pathParameters(
+                        parameterWithName("nickname").description("확인할 닉네임 (2-20자)")
+                    )
+                    .responseSchema(schema("ApiResponse<DuplicateCheckResponse>"))
+                    .responseFields(
+                        getSuccessResponseFields(
+                            fieldWithPath("data.exists").type(BOOLEAN).description("중복 여부 (true: 사용 중, false: 사용 가능)"),
+                            fieldWithPath("data.available").type(BOOLEAN).description("사용 가능 여부 (exists의 반대)"),
+                            fieldWithPath("data.value").type(STRING).description("확인한 값")
+                        )
+                    )
+                    .build()
+            ));
+    }
+
+    @Test
+    @DisplayName("닉네임 중복 확인 API - 사용 가능한 닉네임")
+    void checkNicknameDuplicate_Available() throws Exception {
+        // given
+        String nickname = "available_nick";
+
+        // when & then
+        mockMvc.perform(get("/api/v1/samples/check/nickname/{nickname}", nickname)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.exists").value(false))
+            .andExpect(jsonPath("$.data.available").value(true))
+            .andExpect(jsonPath("$.data.value").value(nickname));
+    }
 }

@@ -88,7 +88,9 @@ public class SecurityConfig {
                     // SECURITY: Actuator는 application.yml에서 제어
                     // dev: health,info,env,metrics
                     // prod: health,info만
-                    auth.requestMatchers("/actuator/**").permitAll();
+                    // Health endpoint는 모니터링을 위해 공개, 나머지는 인증 필요
+                    auth.requestMatchers("/actuator/health", "/actuator/health/**").permitAll();
+                    auth.requestMatchers("/actuator/**").authenticated();
 
                     // SECURITY: H2 Console - 개발 환경에서만 허용
                     if (isDevelopmentProfile()) {

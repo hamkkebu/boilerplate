@@ -44,7 +44,11 @@ CREATE TABLE tbl_boilerplate_sample (
 -- SECURITY: 조건부 UNIQUE 제약조건 (MySQL 8.0.13+, Functional Index)
 -- Race Condition 방어: 동시에 같은 ID로 가입 시도 시 DB 레벨에서 차단
 -- is_deleted=false인 레코드에 대해서만 sample_id/sample_nickname가 유일해야 함
--- is_deleted=true인 레코드는 여러 개 존재 가능 (ID 재사용 허용)
+--
+-- 주의: 재가입 방지 정책
+-- - 애플리케이션 레벨에서 탈퇴한 사용자 ID/닉네임 재사용을 차단합니다 (SampleService.createSample)
+-- - DB 제약조건은 활성 사용자 간의 중복만 방지 (성능 최적화)
+-- - 탈퇴한 사용자(is_deleted=true)의 ID/닉네임은 애플리케이션에서 차단되므로 DB에 도달하지 않음
 
 -- 활성 사용자(is_deleted=false)에 대한 sample_id 유니크 제약
 CREATE UNIQUE INDEX idx_sample_id_active
