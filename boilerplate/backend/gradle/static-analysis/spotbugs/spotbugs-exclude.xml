@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter
+    xmlns="https://github.com/spotbugs/filter/3.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/3.1.0/spotbugs/etc/findbugsfilter.xsd">
+
+    <!-- gRPC 자동 생성 코드 제외 -->
+    <Match>
+        <Package name="~com\.hamkkebu\.boilerplate\.grpc.*"/>
+    </Match>
+
+    <!-- Spring Boot Application 클래스 제외 -->
+    <Match>
+        <Class name="~.*Application"/>
+    </Match>
+
+    <!-- DTO 클래스에서 Serializable 경고 제외 -->
+    <Match>
+        <Package name="~com\.hamkkebu\.boilerplate\.data\.dto.*"/>
+        <Bug pattern="SE_NO_SERIALVERSIONID"/>
+    </Match>
+
+    <!-- Entity 클래스에서 Serializable 경고 제외 -->
+    <Match>
+        <Package name="~com\.hamkkebu\.boilerplate\.data\.entity.*"/>
+        <Bug pattern="SE_NO_SERIALVERSIONID"/>
+    </Match>
+
+    <!-- Event 클래스에서 Serializable 경고 제외 -->
+    <Match>
+        <Package name="~com\.hamkkebu\.boilerplate\.data\.event.*"/>
+        <Bug pattern="SE_NO_SERIALVERSIONID"/>
+    </Match>
+
+    <!-- Lombok 관련 false positive 제외 -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+        <Or>
+            <Class name="~.*Builder"/>
+            <Class name="~.*\.data\..*"/>
+        </Or>
+    </Match>
+
+    <!-- Configuration 클래스의 빈 생성 메서드 경고 제외 -->
+    <Match>
+        <Package name="~com\.hamkkebu\.boilerplate\..*\.config.*"/>
+        <Bug pattern="UPM_UNCALLED_PRIVATE_METHOD"/>
+    </Match>
+
+    <!-- Test 코드에서 일부 경고 완화 -->
+    <Match>
+        <Source name="~.*Test\.java"/>
+        <Or>
+            <Bug pattern="RV_RETURN_VALUE_IGNORED"/>
+            <Bug pattern="NP_NULL_ON_SOME_PATH"/>
+        </Or>
+    </Match>
+
+    <!-- JPA Entity의 필드 초기화 관련 경고 제외 -->
+    <Match>
+        <Package name="~com\.hamkkebu\.boilerplate\.data\.entity.*"/>
+        <Bug pattern="UWF_UNWRITTEN_FIELD"/>
+    </Match>
+
+    <!-- Spring Controller/Service의 필드 주입 관련 경고 완화 -->
+    <Match>
+        <Or>
+            <Package name="~com\.hamkkebu\.boilerplate\.controller.*"/>
+            <Package name="~com\.hamkkebu\.boilerplate\.service.*"/>
+        </Or>
+        <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
+    </Match>
+
+    <!-- 보안 관련 경고는 유지 (FindSecurityBugs) -->
+    <!-- SQL Injection, XSS, Command Injection 등은 제외하지 않음 -->
+
+</FindBugsFilter>

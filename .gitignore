@@ -1,0 +1,19 @@
+.DS_Store
+.idea/
+*.iml
+.gradle/
+build/
+target/
+*.class
+*.jar
+*.war
+!gradle/wrapper/gradle-wrapper.jar
+.env
+application-local.yml
+application-local.properties
+logs/
+
+# Database data directories
+**/db/**/data/
+*.ibd
+*.sdi
