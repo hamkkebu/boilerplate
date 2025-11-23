@@ -1,19 +1,90 @@
-.DS_Store
+# ========================================
+# Environment Variables
+# ========================================
+.env
+.env.local
+.env.*.local
+application-local.yml
+application-local.properties
+
+# ========================================
+# IDE
+# ========================================
 .idea/
+.vscode/
 *.iml
-.gradle/
-build/
-target/
+*.ipr
+*.iws
+.DS_Store
+
+# ========================================
+# Build Output
+# ========================================
+**/build/
+**/target/
+**/dist/
+**/out/
 *.class
 *.jar
 *.war
-!gradle/wrapper/gradle-wrapper.jar
-.env
-application-local.yml
-application-local.properties
+
+# ========================================
+# Logs
+# ========================================
+*.log
 logs/
 
-# Database data directories
+# ========================================
+# Node
+# ========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ========================================
+# Gradle
+# ========================================
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# ========================================
+# Database
+# ========================================
+*.db
+*.sqlite
+*.sqlite3
 **/db/**/data/
 *.ibd
 *.sdi
+
+# ========================================
+# Temporary Files
+# ========================================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ========================================
+# OS
+# ========================================
+Thumbs.db
+.DS_Store
+
+# ========================================
+# Documentation (auto-generated)
+# ========================================
+# Keep only manually written docs, ignore auto-generated reports
+*_AUDIT.md
+*_SUMMARY.md
+*_REPORT.md
+*_GUIDE.md
+*_FIXES.md
+*_IMPROVEMENTS*.md
+*_ENHANCEMENTS*.md
+*_READINESS*.md
+*_COMPATIBILITY*.md
+*_MIGRATION*.md
