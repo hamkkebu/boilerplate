@@ -6,7 +6,7 @@ import com.hamkkebu.boilerplate.data.dto.PublishLedgerEventRequest;
 import com.hamkkebu.boilerplate.data.dto.PublishTransactionEventRequest;
 import com.hamkkebu.boilerplate.data.dto.PublishUserEventRequest;
 import com.hamkkebu.boilerplate.data.event.*;
-import com.hamkkebu.boilerplate.publisher.OutboxEventPublisher;
+import com.hamkkebu.boilerplate.common.publisher.OutboxEventPublisher;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

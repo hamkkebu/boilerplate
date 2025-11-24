@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import LogIn from '@/components/views/Login.vue';
+import LogIn from '@/components/views/LogIn.vue';
 import SignUp from '@/components/views/SignUp.vue';
 import UserInfo from '@/components/views/UserInfo.vue';
 import LeaveUser from '@/components/views/LeaveUser.vue';

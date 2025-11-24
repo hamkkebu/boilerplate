@@ -21,6 +21,10 @@ java {
 	sourceCompatibility = '17'
 }
 
+springBoot {
+	mainClass = 'com.hamkkebu.boilerplate.BoilerplateApplication'
+}
+
 repositories {
 	mavenCentral()
 }
