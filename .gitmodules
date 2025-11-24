@@ -1,0 +1,3 @@
+[submodule "auth-service/common"]
+	path = auth-service/common
+	url = git@github.com:hamkkebu/boilerplate.git
