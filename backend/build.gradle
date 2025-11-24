@@ -1,5 +1,5 @@
 plugins {
-	id 'java'
+	id 'java-library'
 	id 'org.springframework.boot' version '3.1.2'
 	id 'io.spring.dependency-management' version '1.1.2'
 	id 'org.asciidoctor.jvm.convert' version '3.3.2'
@@ -38,44 +38,45 @@ ext {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	// Use 'api' for dependencies that are exposed to consumers
+	api 'org.springframework.boot:spring-boot-starter'
+	api 'org.springframework.boot:spring-boot-starter-web'
+	api 'org.springframework.boot:spring-boot-starter-data-jpa'
+	api 'org.springframework.boot:spring-boot-starter-validation'
 
 	// Security & JWT
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+	api 'org.springframework.boot:spring-boot-starter-security'
+	api 'io.jsonwebtoken:jjwt-api:0.12.3'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
 	// Kafka
-	implementation 'org.springframework.kafka:spring-kafka'
+	api 'org.springframework.kafka:spring-kafka'
 
 	// Redis (Rate Limiting 포함)
-	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	api 'org.springframework.boot:spring-boot-starter-data-redis'
 
 	// .env 파일 로드 (로컬 개발용)
-	implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+	api 'me.paulschwarz:spring-dotenv:4.0.0'
 
 	// gRPC (내부 서비스 간 통신)
-	implementation 'net.devh:grpc-spring-boot-starter:2.15.0.RELEASE'
-	implementation 'io.grpc:grpc-protobuf:1.58.0'
-	implementation 'io.grpc:grpc-stub:1.58.0'
-	implementation 'io.grpc:grpc-netty-shaded:1.58.0'
+	api 'net.devh:grpc-spring-boot-starter:2.15.0.RELEASE'
+	api 'io.grpc:grpc-protobuf:1.58.0'
+	api 'io.grpc:grpc-stub:1.58.0'
+	api 'io.grpc:grpc-netty-shaded:1.58.0'
 	compileOnly 'org.apache.tomcat:annotations-api:6.0.53' // gRPC @Generated annotation
 
 	// Circuit Breaker (gRPC 통신 장애 대응)
-	implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.1.0'
-	implementation 'io.github.resilience4j:resilience4j-circuitbreaker:2.1.0'
-	implementation 'io.github.resilience4j:resilience4j-timelimiter:2.1.0'
+	api 'io.github.resilience4j:resilience4j-spring-boot3:2.1.0'
+	api 'io.github.resilience4j:resilience4j-circuitbreaker:2.1.0'
+	api 'io.github.resilience4j:resilience4j-timelimiter:2.1.0'
 
 	// Monitoring & Metrics
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'io.micrometer:micrometer-registry-prometheus'
+	api 'org.springframework.boot:spring-boot-starter-actuator'
+	api 'io.micrometer:micrometer-registry-prometheus'
 
 	// Swagger UI (OpenAPI 3.0)
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+	api 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 
 	runtimeOnly 'com.mysql:mysql-connector-j'
 
@@ -229,7 +230,11 @@ sourceSets {
 // Checkstyle: 코딩 스타일 체크
 checkstyle {
 	toolVersion = '10.12.5'
-	configFile = file("${rootDir}/gradle/static-analysis/checkstyle/checkstyle.xml")
+	// Only use config file if it exists (for standalone boilerplate project)
+	def checkstyleConfig = file("${rootDir}/gradle/static-analysis/checkstyle/checkstyle.xml")
+	if (checkstyleConfig.exists()) {
+		configFile = checkstyleConfig
+	}
 	ignoreFailures = true
 	showViolations = true
 }
@@ -247,7 +252,11 @@ checkstyleTest {
 pmd {
 	toolVersion = '6.55.0'
 	consoleOutput = true
-	ruleSetFiles = files("${rootDir}/gradle/static-analysis/pmd/pmd-ruleset.xml")
+	// Only use ruleset file if it exists
+	def pmdRuleset = file("${rootDir}/gradle/static-analysis/pmd/pmd-ruleset.xml")
+	if (pmdRuleset.exists()) {
+		ruleSetFiles = files(pmdRuleset)
+	}
 	ruleSets = []
 	ignoreFailures = true
 }
@@ -265,7 +274,11 @@ pmdTest {
 spotbugs {
 	toolVersion = '4.8.3'
 	ignoreFailures = true
-	excludeFilter = file("${rootDir}/gradle/static-analysis/spotbugs/spotbugs-exclude.xml")
+	// Only use exclude filter if it exists
+	def spotbugsExclude = file("${rootDir}/gradle/static-analysis/spotbugs/spotbugs-exclude.xml")
+	if (spotbugsExclude.exists()) {
+		excludeFilter = spotbugsExclude
+	}
 }
 
 spotbugsMain {
