@@ -78,12 +78,13 @@ public class SecurityConfig {
                             "/api/v1/auth/login",
                             "/api/v1/auth/refresh",
                             "/api/v1/auth/validate",
-                            // 회원가입 및 중복 확인만 인증 불필요
+                            // 회원가입 및 중복 확인 (아이디, 닉네임, 이메일)
+                            "/api/v1/users/check/**",
                             "/api/v1/samples/check/**"
                     ).permitAll();
 
                     // 회원가입은 POST 메서드만 인증 불필요
-                    auth.requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/samples").permitAll();
+                    auth.requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/users", "/api/v1/samples").permitAll();
 
                     // SECURITY: Actuator는 application.yml에서 제어
                     // dev: health,info,env,metrics
