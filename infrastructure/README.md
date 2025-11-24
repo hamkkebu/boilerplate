@@ -1,220 +1,176 @@
-# Infrastructure as Code with Terraform
+# Backend Service Infrastructure
 
-이 디렉토리는 Hamkkebu 프로젝트의 인프라를 코드로 관리하기 위한 Terraform 구성을 포함합니다.
+Backend 서비스를 위한 Terraform 인프라 구성입니다.
 
-## 디렉토리 구조
+## 리소스
 
-```
-infrastructure/
-├── common/              # 공통 인프라 (VPC, ALB, ECS 클러스터 등)
-│   ├── main.tf
-│   ├── variables.tf
-│   ├── outputs.tf
-│   └── terraform.tfvars.example
-└── modules/             # 재사용 가능한 Terraform 모듈
-    ├── vpc/
-    ├── security/
-    ├── database/
-    ├── ecs/
-    ├── alb/
-    ├── s3/
-    └── cloudwatch/
-```
+이 구성은 다음 리소스를 생성합니다:
 
-## 공통 인프라 구성
+- **ECS Task Definition**: Spring Boot 애플리케이션을 실행하는 Fargate 태스크
+- **ECS Service**: 태스크를 관리하고 실행하는 서비스
+- **ALB Target Group**: 백엔드 서비스를 위한 타겟 그룹
+- **ALB Listener Rule**: `/api/*` 경로를 백엔드로 라우팅
+- **IAM Roles**: ECS 태스크 실행 및 태스크 역할
+- **CloudWatch Log Group**: 애플리케이션 로그
+- **Secrets Manager**: 데이터베이스 자격 증명
+- **Auto Scaling**: CPU 기반 자동 스케일링
 
-### 포함된 리소스
+## 사전 요구사항
 
-- **VPC**: 격리된 네트워크 환경
-  - Public/Private 서브넷 (Multi-AZ)
-  - NAT Gateway
-  - Internet Gateway
-  - Route Tables
+1. 공통 인프라가 먼저 배포되어 있어야 합니다
+2. ECR 리포지토리가 생성되어 있어야 합니다
+3. Docker 이미지가 ECR에 푸시되어 있어야 합니다
 
-- **Security Groups**: 보안 그룹
-  - ALB 보안 그룹
-  - ECS Tasks 보안 그룹
-  - RDS 보안 그룹
-  - Redis 보안 그룹
-
-- **RDS**: 관리형 MySQL 데이터베이스
-  - 자동 백업
-  - Multi-AZ 옵션
-  - 암호화된 스토리지
-
-- **ECS**: 컨테이너 오케스트레이션
-  - Fargate 클러스터
-  - Container Insights
-
-- **ALB**: Application Load Balancer
-  - HTTP/HTTPS 리스너
-  - Health Check
-
-- **S3**: 객체 스토리지
-  - 애플리케이션 버킷
-  - 로그 버킷
-
-- **CloudWatch**: 모니터링 및 로깅
-  - Log Groups
-  - Dashboard
-  - Alarms
-
-## 사용 방법
-
-### 1. 사전 요구사항
-
-- Terraform >= 1.5.0
-- AWS CLI 설정 완료
-- 적절한 AWS 권한
-
-### 2. 백엔드 설정
-
-Terraform state를 저장할 S3 버킷과 DynamoDB 테이블을 먼저 생성해야 합니다:
+## ECR 리포지토리 생성
 
 ```bash
-# S3 버킷 생성
-aws s3api create-bucket \
-  --bucket your-terraform-state-bucket \
-  --region ap-northeast-2 \
-  --create-bucket-configuration LocationConstraint=ap-northeast-2
-
-# 버킷 버전관리 활성화
-aws s3api put-bucket-versioning \
-  --bucket your-terraform-state-bucket \
-  --versioning-configuration Status=Enabled
-
-# DynamoDB 테이블 생성 (state locking용)
-aws dynamodb create-table \
-  --table-name terraform-state-lock \
-  --attribute-definitions AttributeName=LockID,AttributeType=S \
-  --key-schema AttributeName=LockID,KeyType=HASH \
-  --billing-mode PAY_PER_REQUEST \
+aws ecr create-repository \
+  --repository-name hamkkebu-backend \
   --region ap-northeast-2
 ```
 
-### 3. 공통 인프라 배포
+## Docker 이미지 빌드 및 푸시
 
 ```bash
-cd infrastructure/common
+# ECR 로그인
+aws ecr get-login-password --region ap-northeast-2 | \
+  docker login --username AWS --password-stdin <account-id>.dkr.ecr.ap-northeast-2.amazonaws.com
 
-# terraform.tfvars 파일 생성
+# 이미지 빌드
+docker build -t hamkkebu-backend:latest .
+
+# 이미지 태그
+docker tag hamkkebu-backend:latest \
+  <account-id>.dkr.ecr.ap-northeast-2.amazonaws.com/hamkkebu-backend:latest
+
+# 이미지 푸시
+docker push <account-id>.dkr.ecr.ap-northeast-2.amazonaws.com/hamkkebu-backend:latest
+```
+
+## 배포
+
+```bash
+cd backend/infrastructure
+
+# terraform.tfvars 파일 생성 및 수정
 cp terraform.tfvars.example terraform.tfvars
-# terraform.tfvars 파일을 편집하여 환경에 맞게 수정
 
 # Terraform 초기화
 terraform init -backend-config="bucket=your-terraform-state-bucket"
 
-# 인프라 변경사항 확인
+# 변경사항 확인
 terraform plan
 
-# 인프라 배포
+# 배포
 terraform apply
 ```
 
-### 4. 환경별 배포
+## Secrets Manager 설정
 
-다른 환경(staging, prod)을 배포하려면 워크스페이스를 사용하거나 별도의 tfvars 파일을 생성:
+배포 후 데이터베이스 자격 증명을 Secrets Manager에 추가해야 합니다:
 
 ```bash
-# 워크스페이스 사용
-terraform workspace new staging
-terraform workspace new prod
-
-# 또는 환경별 tfvars 파일 사용
-terraform apply -var-file="staging.tfvars"
-terraform apply -var-file="prod.tfvars"
+aws secretsmanager put-secret-value \
+  --secret-id hamkkebu/dev/backend/db-credentials \
+  --secret-string '{"username":"admin","password":"your-password"}' \
+  --region ap-northeast-2
 ```
 
-## 서비스별 인프라
+## 환경 변수
 
-각 서비스는 자신의 `infrastructure/` 폴더에서 서비스 특화 리소스를 관리합니다:
+Task Definition에서 다음 환경 변수가 설정됩니다:
 
-- ECS Task Definition
-- IAM Roles
-- Service-specific configurations
-- Environment variables
+- `SPRING_PROFILES_ACTIVE`: 환경 (dev/staging/prod)
+- `SERVER_PORT`: 애플리케이션 포트 (8080)
+- `DB_HOST`: RDS 엔드포인트
+- `DB_PORT`: RDS 포트
+- `DB_NAME`: 데이터베이스 이름
+- `DB_USERNAME`: Secrets Manager에서 가져옴
+- `DB_PASSWORD`: Secrets Manager에서 가져옴
 
-예시:
+## Auto Scaling
+
+ECS 서비스는 CPU 사용률을 기반으로 자동 스케일링됩니다:
+
+- Target CPU Utilization: 70%
+- Min Capacity: 1
+- Max Capacity: 4
+- Scale Out Cooldown: 60초
+- Scale In Cooldown: 300초
+
+## 모니터링
+
+### CloudWatch Logs
+
+로그는 다음 위치에 저장됩니다:
 ```
-backend/
-└── infrastructure/
-    ├── main.tf
-    ├── variables.tf
-    └── task-definition.json
-
-frontend/
-└── infrastructure/
-    ├── main.tf
-    └── cloudfront.tf
+/ecs/hamkkebu-dev/backend
 ```
 
-## 보안 고려사항
+### 로그 확인
 
-1. **민감한 정보 관리**
-   - `terraform.tfvars` 파일은 `.gitignore`에 추가
-   - AWS Secrets Manager 또는 Parameter Store 사용 권장
-   - DB 비밀번호는 환경변수로 전달
+```bash
+aws logs tail /ecs/hamkkebu-dev/backend --follow
+```
 
-2. **State 파일 보안**
-   - S3 버킷 암호화 활성화
-   - 버킷 버전관리 활성화
-   - 적절한 IAM 정책 설정
+## Health Check
 
-3. **네트워크 보안**
-   - Private 서브넷에 데이터베이스 배치
-   - 최소 권한 원칙에 따른 보안 그룹 설정
+ALB는 다음 엔드포인트로 헬스 체크를 수행합니다:
+- Path: `/actuator/health`
+- Expected Status: 200
+- Interval: 30초
+- Timeout: 5초
+- Healthy Threshold: 2
+- Unhealthy Threshold: 3
 
-## 비용 최적화
+Spring Boot 애플리케이션에 Spring Actuator가 설정되어 있어야 합니다.
 
-- **개발 환경**:
-  - `single_nat_gateway = true` 설정
-  - `db_instance_class = "db.t3.micro"`
-  - `multi_az = false`
+## 업데이트
 
-- **프로덕션 환경**:
-  - Multi-AZ 활성화
-  - 적절한 인스턴스 타입 선택
-  - Auto Scaling 설정
+새 버전 배포:
 
-## 모듈 설명
+```bash
+# 새 이미지 빌드 및 푸시
+docker build -t hamkkebu-backend:v1.1 .
+docker tag hamkkebu-backend:v1.1 \
+  <account-id>.dkr.ecr.ap-northeast-2.amazonaws.com/hamkkebu-backend:v1.1
+docker push <account-id>.dkr.ecr.ap-northeast-2.amazonaws.com/hamkkebu-backend:v1.1
 
-### VPC Module
-VPC, 서브넷, NAT Gateway, Internet Gateway를 생성합니다.
+# terraform.tfvars에서 image_tag 업데이트
+# image_tag = "v1.1"
 
-### Security Module
-모든 서비스에 필요한 보안 그룹을 생성합니다.
+# 배포
+terraform apply
+```
 
-### Database Module
-RDS MySQL 인스턴스를 생성하고 설정합니다.
+또는 AWS CLI로 직접 업데이트:
 
-### ECS Module
-ECS 클러스터를 생성합니다.
-
-### ALB Module
-Application Load Balancer와 기본 타겟 그룹을 생성합니다.
-
-### S3 Module
-애플리케이션 및 로그용 S3 버킷을 생성합니다.
-
-### CloudWatch Module
-로그 그룹, 대시보드, 알람을 설정합니다.
+```bash
+aws ecs update-service \
+  --cluster hamkkebu-dev-cluster \
+  --service hamkkebu-dev-backend \
+  --force-new-deployment
+```
 
 ## 트러블슈팅
 
-### State Lock 오류
+### 태스크가 시작하지 않는 경우
+
+1. CloudWatch Logs 확인
+2. Task Definition의 환경 변수 확인
+3. IAM 역할 권한 확인
+4. 보안 그룹 설정 확인
+
+### 데이터베이스 연결 실패
+
+1. RDS 엔드포인트 확인
+2. 보안 그룹 규칙 확인
+3. Secrets Manager의 자격 증명 확인
+
+## 정리
+
+리소스 삭제:
+
 ```bash
-# Lock 강제 해제 (주의해서 사용)
-terraform force-unlock <LOCK_ID>
+terraform destroy
 ```
-
-### 리소스 임포트
-기존 리소스를 Terraform으로 관리하려면:
-```bash
-terraform import <resource_type>.<resource_name> <resource_id>
-```
-
-## 참고 자료
-
-- [Terraform AWS Provider 문서](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
-- [AWS ECS Best Practices](https://docs.aws.amazon.com/AmazonECS/latest/bestpracticesguide/)
-- [Terraform Best Practices](https://www.terraform-best-practices.com/)

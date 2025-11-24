@@ -1,5 +1,0 @@
-rootProject.name = 'auth-service'
-
-// Include common module from boilerplate submodule
-include 'common'
-project(':common').projectDir = file('../common/backend')

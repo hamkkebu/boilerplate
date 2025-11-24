@@ -1,5 +1,0 @@
-aws_region              = "ap-northeast-2"
-project_name            = "hamkkebu"
-environment             = "dev"
-terraform_state_bucket  = "your-terraform-state-bucket"
-cloudfront_price_class  = "PriceClass_200"
