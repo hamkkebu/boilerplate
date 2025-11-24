@@ -1,0 +1,69 @@
+services:
+  database:
+    image: mysql:8.0
+    platform: linux/amd64
+    container_name: hamkkebu-auth-service-db
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+      - MYSQL_DATABASE=${DB_NAME:-hamkkebu_auth}
+    command:
+      - --innodb-use-native-aio=0
+      - --innodb-flush-method=fsync
+      - --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
+      - ./backend/src/main/resources/data.sql:/docker-entrypoint-initdb.d/2-data.sql
+    networks:
+      - hamkkebu-auth-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: hamkkebu-auth-service-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/${DB_NAME:-hamkkebu_auth}?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_HOST: host.docker.internal
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      LOGIN_MAX_ATTEMPTS: ${LOGIN_MAX_ATTEMPTS:-20}
+      LOGIN_BLOCK_DURATION: ${LOGIN_BLOCK_DURATION:-3}
+    restart: always
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - hamkkebu-auth-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: hamkkebu-auth-service-frontend
+    ports:
+      - "80:80"
+    restart: always
+    depends_on:
+      - backend
+    networks:
+      - hamkkebu-auth-network
+
+networks:
+  hamkkebu-auth-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

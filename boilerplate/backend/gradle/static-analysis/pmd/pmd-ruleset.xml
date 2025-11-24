@@ -1,0 +1,144 @@
+<?xml version="1.0"?>
+<ruleset name="Custom PMD Ruleset"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        PMD ruleset for Spring Boot projects
+        Focus: Best practices, Code quality, Security
+    </description>
+
+    <!-- Best Practices -->
+    <rule ref="category/java/bestpractices.xml">
+        <!-- JUnit 어설션 체크 제외 (AssertJ 사용) -->
+        <exclude name="JUnitAssertionsShouldIncludeMessage"/>
+        <exclude name="JUnitTestContainsTooManyAsserts"/>
+
+        <!-- 시스템 출력 허용 (로깅 권장하지만 개발 중 허용) -->
+        <exclude name="SystemPrintln"/>
+
+        <!-- 추상 클래스 네이밍 완화 -->
+        <exclude name="AbstractClassWithoutAbstractMethod"/>
+    </rule>
+
+    <!-- Code Style -->
+    <rule ref="category/java/codestyle.xml">
+        <!-- 짧은 변수명 허용 (i, j, k 등) -->
+        <exclude name="ShortVariable"/>
+        <exclude name="LongVariable"/>
+
+        <!-- 주석 요구사항 완화 -->
+        <exclude name="CommentDefaultAccessModifier"/>
+        <exclude name="AtLeastOneConstructor"/>
+
+        <!-- 필드 네이밍 완화 (Lombok과 충돌 방지) -->
+        <exclude name="OnlyOneReturn"/>
+        <exclude name="LocalVariableCouldBeFinal"/>
+        <exclude name="MethodArgumentCouldBeFinal"/>
+
+        <!-- 콜스택 깊이 -->
+        <exclude name="CallSuperInConstructor"/>
+
+        <!-- DTO용 완화 -->
+        <exclude name="TooManyFields"/>
+    </rule>
+
+    <!-- Design -->
+    <rule ref="category/java/design.xml">
+        <!-- 복잡도 규칙 커스터마이징 -->
+        <exclude name="CyclomaticComplexity"/>
+        <exclude name="NPathComplexity"/>
+        <exclude name="TooManyMethods"/>
+        <exclude name="ExcessiveImports"/>
+        <exclude name="LawOfDemeter"/>
+        <exclude name="LoosePackageCoupling"/>
+        <exclude name="DataClass"/>
+    </rule>
+
+    <!-- 복잡도 규칙 재정의 -->
+    <rule ref="category/java/design.xml/CyclomaticComplexity">
+        <properties>
+            <property name="classReportLevel" value="80"/>
+            <property name="methodReportLevel" value="15"/>
+        </properties>
+    </rule>
+
+    <rule ref="category/java/design.xml/NPathComplexity">
+        <properties>
+            <property name="reportLevel" value="200"/>
+        </properties>
+    </rule>
+
+    <!-- Documentation (완화) -->
+    <rule ref="category/java/documentation.xml">
+        <exclude name="CommentRequired"/>
+        <exclude name="CommentSize"/>
+    </rule>
+
+    <!-- Error Prone (중요!) -->
+    <rule ref="category/java/errorprone.xml">
+        <!-- Lombok과 충돌 방지 -->
+        <exclude name="BeanMembersShouldSerialize"/>
+        <exclude name="DataflowAnomalyAnalysis"/>
+
+        <!-- 너무 엄격한 규칙 제외 -->
+        <exclude name="AvoidLiteralsInIfCondition"/>
+        <exclude name="NullAssignment"/>
+    </rule>
+
+    <!-- Multithreading -->
+    <rule ref="category/java/multithreading.xml">
+        <!-- Spring 관리 빈은 싱글톤이므로 일부 규칙 완화 -->
+        <exclude name="UseConcurrentHashMap"/>
+    </rule>
+
+    <!-- Performance -->
+    <rule ref="category/java/performance.xml">
+        <!-- 가독성을 위해 일부 규칙 완화 -->
+        <exclude name="AvoidInstantiatingObjectsInLoops"/>
+    </rule>
+
+    <!-- Security (중요!) -->
+    <rule ref="category/java/security.xml"/>
+
+    <!-- Custom Rules -->
+
+    <!-- 메서드 길이 제한 -->
+    <rule ref="category/java/design.xml/ExcessiveMethodLength">
+        <properties>
+            <property name="minimum" value="150"/>
+        </properties>
+    </rule>
+
+    <!-- 클래스 길이 제한 -->
+    <rule ref="category/java/design.xml/ExcessiveClassLength">
+        <properties>
+            <property name="minimum" value="1000"/>
+        </properties>
+    </rule>
+
+    <!-- 파라미터 개수 제한 -->
+    <rule ref="category/java/design.xml/ExcessiveParameterList">
+        <properties>
+            <property name="minimum" value="7"/>
+        </properties>
+    </rule>
+
+    <!-- 중복 코드 검출 (CPD) -->
+    <rule ref="category/java/errorprone.xml/AvoidDuplicateLiterals">
+        <properties>
+            <property name="maxDuplicateLiterals" value="4"/>
+            <property name="minimumLength" value="3"/>
+            <property name="skipAnnotations" value="true"/>
+        </properties>
+    </rule>
+
+    <!-- 빈 catch 블록 금지 -->
+    <rule ref="category/java/errorprone.xml/EmptyCatchBlock">
+        <properties>
+            <property name="allowCommentedBlocks" value="true"/>
+        </properties>
+    </rule>
+
+</ruleset>

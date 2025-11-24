@@ -4,8 +4,6 @@
 .env
 .env.local
 .env.*.local
-application-local.yml
-application-local.properties
 
 # ========================================
 # IDE
@@ -24,9 +22,6 @@ application-local.properties
 **/target/
 **/dist/
 **/out/
-*.class
-*.jar
-*.war
 
 # ========================================
 # Logs
@@ -55,9 +50,6 @@ gradle-app.setting
 *.db
 *.sqlite
 *.sqlite3
-**/db/**/data/
-*.ibd
-*.sdi
 
 # ========================================
 # Temporary Files
