@@ -1,0 +1,97 @@
+# 프로덕션 환경 설정 (Production Profile)
+# 활성화: --spring.profiles.active=prod 또는 SPRING_PROFILES_ACTIVE=prod
+
+# 서버 정보 (OpenAPI Swagger 문서용)
+# 실제 프로덕션 도메인으로 변경 필요
+server:
+  url: https://api.hamkkebu.com
+  description: Production Server
+
+  # HTTP 포트 (HTTP to HTTPS 리다이렉트용)
+  http:
+    port: 8080
+
+  # SSL/TLS 설정 (HTTPS - Let's Encrypt)
+  # 프로덕션에서는 반드시 활성화 필요
+  port: 8443  # HTTPS 포트
+  ssl:
+    enabled: true
+    # Let's Encrypt 인증서 경로 (실제 도메인에 맞게 변경)
+    key-store: file:/etc/letsencrypt/live/yourdomain.com/keystore.p12
+    key-store-password: ${SSL_KEYSTORE_PASSWORD}  # 환경 변수로 관리
+    key-store-type: PKCS12
+    key-alias: hamkkebu
+
+    # TLS 프로토콜 및 암호화 스위트 제한
+    enabled-protocols: TLSv1.3,TLSv1.2  # TLS 1.3, 1.2만 허용
+    # OWASP 권장 암호화 스위트
+    ciphers: >
+      TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+      TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+      TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+      TLS_AES_128_GCM_SHA256,
+      TLS_AES_256_GCM_SHA384,
+      TLS_CHACHA20_POLY1305_SHA256
+
+spring:
+  # H2 Console 완전 비활성화 (보안)
+  h2:
+    console:
+      enabled: false
+
+  jpa:
+    show-sql: false  # SQL 로그 출력 비활성화 (성능 향상)
+    properties:
+      hibernate:
+        format_sql: false
+        use_sql_comments: false
+  sql:
+    init:
+      mode: never  # 시작 시 SQL 스크립트 실행 안 함 (프로덕션에서는 마이그레이션 도구 사용)
+
+# Actuator 프로덕션 보안 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info  # health, info만 노출 (env, configprops 등 민감 정보 제거)
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: never  # health 상세 정보 숨김
+    info:
+      enabled: true
+  # 추가 보안: Actuator 포트 분리 (옵션)
+  # server:
+  #   port: 9090  # 별도 포트 사용 시
+
+logging:
+  level:
+    com.hamkkebu.boilerplate: INFO  # 애플리케이션 로그: INFO 레벨
+    org.springframework.web: WARN  # Spring Web 로그: WARN 레벨
+    org.springframework.security: WARN  # Spring Security 로그: WARN 레벨
+    org.hibernate.SQL: WARN  # Hibernate SQL 로그 최소화
+    org.apache.kafka: WARN  # Kafka 로그: WARN 레벨
+    org.springframework.kafka: WARN  # Spring Kafka 로그: WARN 레벨
+
+# Swagger UI 프로덕션 환경 설정
+springdoc:
+  swagger-ui:
+    enabled: false  # Swagger UI 비활성화 (보안)
+  api-docs:
+    enabled: false  # API Docs 비활성화 (보안)
+
+# CORS 프로덕션 환경 설정
+# 실제 프로덕션 도메인으로 변경 필요
+cors:
+  allowed-origins:
+    - "https://hamkkebu.com"
+    - "https://www.hamkkebu.com"
+    - "https://api.hamkkebu.com"
+
+# Security 프로덕션 환경 설정
+security:
+  rate-limiting:
+    # 프로덕션: Reverse Proxy/Load Balancer 사용 시 true로 설정
+    # Nginx, ALB, CloudFront 등 사용 시 X-Forwarded-For 헤더 신뢰
+    trust-proxy: true
