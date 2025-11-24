@@ -22,9 +22,10 @@ class SampleListenerTest {
         // given
         SampleEvent event = SampleEvent.builder()
             .userId("user-123")
+            .sampleId("sample-456")
             .build();
 
         // when & then - 예외 발생하지 않음 확인
-        sampleListener.handleSampleEvent(event);
+        sampleListener.getEvent(event);
     }
 }

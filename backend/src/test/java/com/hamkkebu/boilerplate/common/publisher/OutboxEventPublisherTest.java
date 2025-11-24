@@ -1,5 +1,6 @@
 package com.hamkkebu.boilerplate.common.publisher;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hamkkebu.boilerplate.data.entity.OutboxEvent;
 import com.hamkkebu.boilerplate.data.event.SampleEvent;
 import com.hamkkebu.boilerplate.repository.OutboxEventRepository;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -22,6 +24,9 @@ class OutboxEventPublisherTest {
     @Mock
     private OutboxEventRepository outboxEventRepository;
 
+    @Spy
+    private ObjectMapper objectMapper;
+
     @InjectMocks
     private OutboxEventPublisher outboxEventPublisher;
 
@@ -31,6 +36,7 @@ class OutboxEventPublisherTest {
         // given
         SampleEvent event = SampleEvent.builder()
             .userId("user-123")
+            .sampleId("sample-456")
             .build();
         given(outboxEventRepository.save(any(OutboxEvent.class)))
             .willAnswer(invocation -> invocation.getArgument(0));
