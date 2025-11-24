@@ -3,6 +3,7 @@ package com.hamkkebu.boilerplate.common.scheduler;
 import com.hamkkebu.boilerplate.common.enums.OutboxEventStatus;
 import com.hamkkebu.boilerplate.data.entity.OutboxEvent;
 import com.hamkkebu.boilerplate.repository.OutboxEventRepository;
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -68,22 +69,34 @@ public class OutboxEventScheduler {
                 // Kafka로 발행
                 publishToKafka(outboxEvent);
 
+            } catch (OptimisticLockException e) {
+                // 다른 인스턴스가 이미 이 이벤트를 처리했음 (정상 케이스)
+                log.debug("Event already processed by another instance: eventId={}",
+                    outboxEvent.getEventId());
+                // 아무 처리도 하지 않고 넘어감
+
             } catch (Exception e) {
                 log.error("Failed to publish event to Kafka: eventId={}, error={}",
                     outboxEvent.getEventId(), e.getMessage(), e);
 
-                // 재시도 가능 여부 확인
-                if (outboxEvent.canRetry()) {
-                    outboxEvent.incrementRetry();
-                    outboxEventRepository.save(outboxEvent);
-                    log.warn("Incremented retry count for event: eventId={}, retryCount={}/{}",
-                        outboxEvent.getEventId(), outboxEvent.getRetryCount(), outboxEvent.getMaxRetry());
-                } else {
-                    // 최대 재시도 횟수 초과
-                    outboxEvent.markAsFailed(e.getMessage());
-                    outboxEventRepository.save(outboxEvent);
-                    log.error("Event marked as FAILED after {} retries: eventId={}",
-                        outboxEvent.getMaxRetry(), outboxEvent.getEventId());
+                try {
+                    // 재시도 가능 여부 확인
+                    if (outboxEvent.canRetry()) {
+                        outboxEvent.incrementRetry();
+                        outboxEventRepository.save(outboxEvent);
+                        log.warn("Incremented retry count for event: eventId={}, retryCount={}/{}",
+                            outboxEvent.getEventId(), outboxEvent.getRetryCount(), outboxEvent.getMaxRetry());
+                    } else {
+                        // 최대 재시도 횟수 초과
+                        outboxEvent.markAsFailed(e.getMessage());
+                        outboxEventRepository.save(outboxEvent);
+                        log.error("Event marked as FAILED after {} retries: eventId={}",
+                            outboxEvent.getMaxRetry(), outboxEvent.getEventId());
+                    }
+                } catch (OptimisticLockException oe) {
+                    // 재시도 카운트 업데이트 중 다른 인스턴스가 먼저 처리함
+                    log.debug("Event retry count already updated by another instance: eventId={}",
+                        outboxEvent.getEventId());
                 }
             }
         }

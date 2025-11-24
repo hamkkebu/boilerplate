@@ -43,27 +43,72 @@ public class JwtTokenProvider {
     /**
      * SecretKey 초기화 및 검증
      *
-     * SECURITY: JWT Secret 길이 검증 (최소 256-bit / 32 bytes)
+     * <p>SECURITY: JWT Secret 길이 검증 (최소 256-bit / 32 bytes)</p>
+     * <p>이 메서드는 @PostConstruct로 Bean 초기화 시점에 실행되어
+     * 애플리케이션 시작 전에 JWT Secret의 유효성을 검증합니다.</p>
+     * <p>검증 실패 시 애플리케이션이 시작되지 않습니다.</p>
      */
     @PostConstruct
     protected void init() {
+        log.info("Validating JWT_SECRET configuration...");
+
+        // 환경 변수가 설정되지 않았거나 비어있는 경우
+        if (secretKey == null || secretKey.trim().isEmpty()) {
+            String errorMsg = """
+
+                ================================================================================
+                CONFIGURATION ERROR: JWT_SECRET is not configured!
+                ================================================================================
+                Environment variable 'JWT_SECRET' is required but not set.
+
+                Please set JWT_SECRET in your .env file or environment variables:
+                  export JWT_SECRET=$(openssl rand -base64 32)
+
+                For production, use at least 512-bit (64 bytes):
+                  export JWT_SECRET=$(openssl rand -base64 64)
+                ================================================================================
+                """;
+            log.error(errorMsg);
+            throw new IllegalStateException("JWT_SECRET environment variable is not configured");
+        }
+
         byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
 
         // SECURITY: Secret 길이 검증 (최소 256-bit = 32 bytes)
         if (keyBytes.length < 32) {
-            String errorMsg = String.format(
-                "JWT_SECRET must be at least 256 bits (32 bytes). " +
-                "Current length: %d bytes. " +
-                "Please use a stronger secret key. " +
-                "Generate one with: openssl rand -base64 32",
+            String errorMsg = String.format("""
+
+                ================================================================================
+                SECURITY ERROR: JWT_SECRET is too short!
+                ================================================================================
+                JWT_SECRET must be at least 256 bits (32 bytes).
+                Current length: %d bytes
+
+                Generate a secure secret key:
+                  openssl rand -base64 32   # For 256-bit security (minimum)
+                  openssl rand -base64 64   # For 512-bit security (recommended)
+
+                Set it in your .env file:
+                  JWT_SECRET=<generated_secret_here>
+                ================================================================================
+                """,
                 keyBytes.length
             );
             log.error(errorMsg);
-            throw new IllegalStateException(errorMsg);
+            throw new IllegalStateException(String.format(
+                "JWT_SECRET is too short (%d bytes). Minimum required: 32 bytes",
+                keyBytes.length
+            ));
         }
 
+        // SecretKey 생성
         this.key = Keys.hmacShaKeyFor(keyBytes);
-        log.info("JWT SecretKey initialized successfully (length: {} bytes)", keyBytes.length);
+
+        log.info("✓ JWT_SECRET validation successful");
+        log.info("✓ JWT SecretKey initialized (length: {} bytes, security: {}-bit)",
+            keyBytes.length, keyBytes.length * 8);
+        log.info("✓ Access token validity: {} ms ({} hour)", accessTokenValidity, accessTokenValidity / 3600000);
+        log.info("✓ Refresh token validity: {} ms ({} days)", refreshTokenValidity, refreshTokenValidity / 86400000);
     }
 
     /**

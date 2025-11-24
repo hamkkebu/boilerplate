@@ -119,6 +119,16 @@ public class OutboxEvent {
     private LocalDateTime lastRetryAt;
 
     /**
+     * 낙관적 락(Optimistic Locking)을 위한 버전 필드
+     *
+     * <p>여러 인스턴스가 동시에 같은 이벤트를 처리하는 것을 방지합니다.</p>
+     * <p>JPA가 UPDATE 시 자동으로 버전을 체크하고 증가시킵니다.</p>
+     */
+    @Version
+    @Column(name = "version")
+    private Long version;
+
+    /**
      * 발행 성공 처리
      */
     public void markAsPublished() {

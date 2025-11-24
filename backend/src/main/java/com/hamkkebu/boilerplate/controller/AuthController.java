@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -103,13 +103,12 @@ public class AuthController {
      * <p>Spring Security의 인증 정보에서 현재 사용자 ID를 반환합니다.</p>
      * <p>Swagger의 Authorize 버튼으로 설정한 JWT 토큰이 자동으로 사용됩니다.</p>
      *
-     * @param authentication Spring Security 인증 정보
+     * @param userId Spring Security가 추출한 사용자 ID
      * @return 사용자 ID
      */
     @Operation(summary = "현재 사용자 정보", description = "JWT 토큰에서 현재 사용자 정보를 조회합니다.")
     @GetMapping("/me")
-    public ApiResponse<String> getCurrentUser(Authentication authentication) {
-        String userId = authentication.getName();
+    public ApiResponse<String> getCurrentUser(@AuthenticationPrincipal String userId) {
         return ApiResponse.success(userId, "사용자 정보 조회 성공");
     }
 
@@ -119,7 +118,7 @@ public class AuthController {
      * <p>accessToken으로 사용자를 인증하고, refreshToken을 Redis Whitelist에서 제거합니다.</p>
      * <p>Swagger의 Authorize 버튼으로 설정한 JWT 토큰이 자동으로 사용됩니다.</p>
      *
-     * @param authentication Spring Security 인증 정보
+     * @param userId Spring Security가 추출한 사용자 ID
      * @param refreshToken 제거할 리프레시 토큰 (선택)
      * @return 로그아웃 성공 메시지
      */
@@ -129,10 +128,9 @@ public class AuthController {
     )
     @PostMapping("/logout")
     public ApiResponse<Void> logout(
-            Authentication authentication,
+            @AuthenticationPrincipal String userId,
             @RequestHeader(value = "Refresh-Token", required = false) String refreshToken
     ) {
-        String userId = authentication.getName();
         log.info("Logout request for user: {}", userId);
         authService.logout(refreshToken);
         return ApiResponse.success("로그아웃 성공");

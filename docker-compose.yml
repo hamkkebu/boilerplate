@@ -18,8 +18,8 @@ services:
       - mysql-data:/var/lib/mysql
     networks:
       - hamkkebu-boilerplate-network
-    # SECURITY: non-root 사용자로 실행
-    user: "999:999"
+    # SECURITY: non-root 사용자로 실행 (UID:GID 1000:1000)
+    user: "1000:1000"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
       interval: 10s
@@ -41,8 +41,8 @@ services:
       - redis-data:/data
     networks:
       - hamkkebu-boilerplate-network
-    # SECURITY: non-root 사용자로 실행
-    user: "999:999"
+    # SECURITY: non-root 사용자로 실행 (UID:GID 1000:1000)
+    user: "1000:1000"
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-devRedisPassword123!}", "ping"]
       interval: 10s
@@ -175,8 +175,8 @@ services:
       - kafka
     networks:
       - hamkkebu-boilerplate-network
-    # SECURITY: non-root 사용자로 실행
-    user: "1001:1001"
+    # SECURITY: non-root 사용자로 실행 (UID:GID 1000:1000)
+    user: "1000:1000"
 
   # Frontend
   frontend:

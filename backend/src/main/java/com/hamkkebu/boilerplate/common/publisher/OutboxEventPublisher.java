@@ -2,7 +2,6 @@ package com.hamkkebu.boilerplate.common.publisher;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.hamkkebu.boilerplate.data.entity.OutboxEvent;
 import com.hamkkebu.boilerplate.data.event.DomainEvent;
 import com.hamkkebu.boilerplate.repository.OutboxEventRepository;
@@ -42,7 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class OutboxEventPublisher {
 
     private final OutboxEventRepository outboxEventRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    private final ObjectMapper objectMapper;
 
     /**
      * 이벤트를 Outbox 테이블에 저장
