@@ -83,6 +83,7 @@ CREATE TABLE tbl_outbox_event (
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',  -- PENDING, PUBLISHED, FAILED
     retry_count INT NOT NULL DEFAULT 0,        -- 재시도 횟수
     max_retry INT NOT NULL DEFAULT 3,          -- 최대 재시도 횟수
+    version BIGINT NOT NULL DEFAULT 0,         -- 낙관적 락을 위한 버전 필드
 
     -- Error Tracking
     error_message TEXT,                        -- 실패 시 에러 메시지
