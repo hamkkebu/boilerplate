@@ -145,7 +145,10 @@ services:
       dockerfile: Dockerfile
     container_name: hamkkebu-boilerplate-backend
     ports:
-      - "8080:8080"
+      # boilerplate는 8080 포트 사용 (auth-service는 8081)
+      - "${BACKEND_PORT:-8080}:8080"
+      # gRPC 포트 (boilerplate는 9090, auth-service는 9091)
+      - "${GRPC_PORT:-9090}:9090"
     environment:
       # SECURITY: 환경변수로 주입 (.env 파일 사용)
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
@@ -159,6 +162,8 @@ services:
       SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-devRedisPassword123!}
       # JWT Secret (최소 32 bytes 권장)
       JWT_SECRET: ${JWT_SECRET:-ThisIsADevelopmentSecretKeyPleaseChangeInProduction32Bytes}
+      # gRPC 클라이언트 설정 (auth-service 연결)
+      GRPC_CLIENT_USER_SERVICE_ADDRESS: ${USER_SERVICE_GRPC_ADDRESS:-static://auth-service-backend:9091}
     restart: "no"
     depends_on:
       database:
@@ -183,7 +188,8 @@ services:
       dockerfile: Dockerfile
     container_name: hamkkebu-boilerplate-frontend
     ports:
-      - "80:80"
+      # Boilerplate Frontend는 3000 포트 사용 (Auth Service는 3001)
+      - "${FRONTEND_PORT:-3000}:80"
     restart: always
     depends_on:
       - backend

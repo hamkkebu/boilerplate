@@ -87,3 +87,14 @@ security:
   rate-limiting:
     # 개발 환경: 프록시 없음
     trust-proxy: false
+
+# gRPC 개발 환경 설정
+grpc:
+  server:
+    # boilerplate gRPC 서버는 기본 포트 9090 사용
+    port: 9090
+  client:
+    # auth-service는 개발 환경에서 9091 포트 사용
+    user-service:
+      address: static://localhost:9091
+      negotiationType: plaintext
