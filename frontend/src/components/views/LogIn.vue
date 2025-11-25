@@ -89,7 +89,7 @@ export default defineComponent({
       // 로그인 API 호출 (비밀번호 검증 포함)
       const data = await execute(() =>
         apiClient.post(API_ENDPOINTS.AUTH.LOGIN, {
-          sampleId: user_id.value,
+          username: user_id.value,
           password: user_pw.value,
         })
       );
