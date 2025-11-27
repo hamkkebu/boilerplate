@@ -194,6 +194,8 @@ services:
 
 networks:
   hamkkebu-boilerplate-network:
+    name: hamkkebu-network
+    driver: bridge
 
 volumes:
   mysql-data:
