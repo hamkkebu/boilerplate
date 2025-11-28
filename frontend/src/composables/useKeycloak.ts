@@ -70,7 +70,8 @@ export function useKeycloak() {
         onLoad: 'check-sso',
         silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
         pkceMethod: 'S256',
-        checkLoginIframe: false,
+        checkLoginIframe: true,
+        checkLoginIframeInterval: 5, // 5초마다 세션 상태 확인
       });
 
       isInitialized.value = true;
@@ -97,6 +98,15 @@ export function useKeycloak() {
       keycloakInstance.onAuthLogout = () => {
         console.log('User logged out');
         clearAuthState();
+        // SSO 로그아웃 감지 시 로그인 페이지로 리다이렉트
+        window.location.href = window.location.origin;
+      };
+
+      // 세션 상태 변경 이벤트 (다른 앱에서 로그아웃 시)
+      keycloakInstance.onAuthRefreshError = () => {
+        console.log('Auth refresh error - session may have ended');
+        clearAuthState();
+        window.location.href = window.location.origin;
       };
 
       return authenticated;
