@@ -194,6 +194,7 @@ export function useKeycloak() {
 
   /**
    * 사용자 정보 업데이트
+   * Keycloak 모드에서는 localStorage를 사용하지 않음 (Keycloak이 세션 관리)
    */
   const updateUserInfo = (): void => {
     if (!keycloakInstance || !keycloakInstance.tokenParsed) {
@@ -218,16 +219,8 @@ export function useKeycloak() {
       roles,
     };
 
-    // localStorage에도 저장 (다른 컴포넌트에서 사용)
-    if (token.value) {
-      localStorage.setItem('authToken', token.value);
-    }
-    if (refreshToken.value) {
-      localStorage.setItem('refreshToken', refreshToken.value);
-    }
-    if (currentUser.value) {
-      localStorage.setItem('currentUser', JSON.stringify(currentUser.value));
-    }
+    // Keycloak 모드에서는 localStorage 사용 안함
+    // 토큰은 keycloak-js가 메모리에서 관리하고, 세션은 Keycloak 서버가 관리
   };
 
   /**

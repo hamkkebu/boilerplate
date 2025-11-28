@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue';
-import apiClient from '@/api/client';
+import apiClient, { setTokenProvider } from '@/api/client';
 import { API_ENDPOINTS } from '@/constants';
 import { useKeycloak } from './useKeycloak';
 import type { AuthUser } from '@/types/domain.types';
@@ -63,6 +63,9 @@ export function useAuth() {
       return isAuthenticated.value;
     }
 
+    // Keycloak 모드: API 클라이언트에 토큰 제공자 설정
+    setTokenProvider(() => keycloak.getToken());
+
     const authenticated = await keycloak.init();
 
     if (authenticated && keycloak.currentUser.value) {
@@ -79,11 +82,8 @@ export function useAuth() {
         isVerified: true,
       };
     } else {
-      // Keycloak 세션이 유효하지 않으면 localStorage 정리
+      // Keycloak 세션이 유효하지 않으면 상태 초기화
       currentUser.value = null;
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('currentUser');
     }
 
     return authenticated;
@@ -166,9 +166,15 @@ export function useAuth() {
   };
 
   /**
-   * 저장된 사용자 정보 복원
+   * 저장된 사용자 정보 복원 (JWT 모드 전용)
    */
   const restoreUser = () => {
+    if (isKeycloakMode) {
+      // Keycloak 모드에서는 initAuth()를 통해 복원
+      console.warn('restoreUser() is not used in Keycloak mode. Use initAuth() instead.');
+      return;
+    }
+
     const userJson = localStorage.getItem('currentUser');
     if (userJson) {
       try {
@@ -191,9 +197,15 @@ export function useAuth() {
   };
 
   /**
-   * 동기적으로 토큰 가져오기 (기존 호환성)
+   * 동기적으로 토큰 가져오기 (JWT 모드 전용, 기존 호환성)
+   * Keycloak 모드에서는 getToken()을 사용하세요
    */
   const getTokenSync = (): string | null => {
+    if (isKeycloakMode) {
+      // Keycloak 모드에서는 토큰이 메모리에만 있으므로 동기적으로 가져올 수 없음
+      console.warn('getTokenSync() is not recommended in Keycloak mode. Use getToken() instead.');
+      return keycloak.token.value;
+    }
     return localStorage.getItem('authToken');
   };
 
