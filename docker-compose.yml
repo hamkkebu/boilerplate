@@ -15,7 +15,7 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
-      - hamkkebu-boilerplate-network
+      - boilerplate-internal
     # MySQL은 기본 사용자(mysql)로 실행 - 볼륨 쓰기 권한 보장
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
@@ -23,7 +23,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis (Refresh Token 저장)
+  # Redis (Refresh Token 저장) - 공유 인프라
   redis:
     image: redis:7-alpine
     container_name: hamkkebu-boilerplate-redis
@@ -37,7 +37,8 @@ services:
     volumes:
       - redis-data:/data
     networks:
-      - hamkkebu-boilerplate-network
+      - boilerplate-internal
+      - hamkkebu-infra
     # Redis는 기본 사용자(redis)로 실행 - 볼륨 쓰기 권한 보장
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-devRedisPassword123!}", "ping"]
@@ -58,13 +59,13 @@ services:
     depends_on:
       - redis
     networks:
-      - hamkkebu-boilerplate-network
+      - boilerplate-internal
     # 프로덕션 배포 시 이 서비스 제거:
     # docker-compose up -d database redis kafka backend frontend
     profiles:
       - dev  # 개발 환경에서만 실행
 
-  # Zookeeper (Kafka 의존성)
+  # Zookeeper (Kafka 의존성) - 공유 인프라
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: hamkkebu-boilerplate-zookeeper
@@ -75,7 +76,8 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     networks:
-      - hamkkebu-boilerplate-network
+      - boilerplate-internal
+      - hamkkebu-infra
     # Zookeeper는 기본 사용자로 실행 - 볼륨 쓰기 권한 보장
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "2181"]
@@ -83,7 +85,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # Kafka
+  # Kafka - 공유 인프라
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: hamkkebu-boilerplate-kafka
@@ -94,7 +96,7 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://hamkkebu-boilerplate-kafka:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -105,7 +107,8 @@ services:
       zookeeper:
         condition: service_healthy
     networks:
-      - hamkkebu-boilerplate-network
+      - boilerplate-internal
+      - hamkkebu-infra
     # Kafka는 기본 사용자로 실행 - 볼륨 쓰기 권한 보장
     healthcheck:
       test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
@@ -123,12 +126,13 @@ services:
       - "127.0.0.1:8989:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: hamkkebu-boilerplate-kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: hamkkebu-boilerplate-zookeeper:2181
     depends_on:
       - kafka
     networks:
-      - hamkkebu-boilerplate-network
+      - boilerplate-internal
+      - hamkkebu-infra
     # 프로덕션 배포 시 이 서비스 제거:
     # docker-compose up -d database redis kafka backend frontend
     profiles:
@@ -159,7 +163,7 @@ services:
       # JWT Secret (최소 32 bytes 권장)
       JWT_SECRET: ${JWT_SECRET:-ThisIsADevelopmentSecretKeyPleaseChangeInProduction32Bytes}
       # gRPC 클라이언트 설정 (auth-service 연결)
-      GRPC_CLIENT_USER_SERVICE_ADDRESS: ${USER_SERVICE_GRPC_ADDRESS:-static://auth-service-backend:9091}
+      GRPC_CLIENT_USER_SERVICE_ADDRESS: ${USER_SERVICE_GRPC_ADDRESS:-static://hamkkebu-auth-service-backend:9091}
     restart: "no"
     depends_on:
       database:
@@ -168,12 +172,9 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
-    links:
-      - database
-      - redis
-      - kafka
     networks:
-      - hamkkebu-boilerplate-network
+      - boilerplate-internal
+      - hamkkebu-infra
 
   # Frontend
   frontend:
@@ -187,14 +188,17 @@ services:
     restart: always
     depends_on:
       - backend
-    links:
-      - backend
     networks:
-      - hamkkebu-boilerplate-network
+      - boilerplate-internal
 
 networks:
-  hamkkebu-boilerplate-network:
-    name: hamkkebu-network
+  # 내부 전용 네트워크 (DB 격리)
+  boilerplate-internal:
+    driver: bridge
+
+  # 공유 인프라 네트워크 (Redis, Kafka, 서비스 간 통신)
+  hamkkebu-infra:
+    name: hamkkebu-infra
     driver: bridge
 
 volumes:
