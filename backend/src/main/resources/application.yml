@@ -68,10 +68,23 @@ spring:
           max-idle: 8
           min-idle: 0
 
-# JWT 설정
+# Keycloak SSO 설정
+keycloak:
+  enabled: ${KEYCLOAK_ENABLED:false}  # true로 설정하면 Keycloak OAuth2 사용
+  auth-server-url: ${KEYCLOAK_AUTH_SERVER_URL:http://localhost:8180}
+  realm: ${KEYCLOAK_REALM:hamkkebu}
+  client-id: ${KEYCLOAK_CLIENT_ID:hamkkebu-backend}
+  client-secret: ${KEYCLOAK_CLIENT_SECRET:hamkkebu-backend-secret}
+
+# Spring Security OAuth2 Resource Server 설정 (Keycloak 연동)
+spring.security.oauth2.resourceserver.jwt:
+  issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/hamkkebu}
+  jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/hamkkebu/protocol/openid-connect/certs}
+
+# JWT 설정 (Keycloak 미사용 시)
 jwt:
-  secret: ${JWT_SECRET}  # REQUIRED: 환경 변수로 반드시 설정해야 함 (256-bit 이상)
-  access-token-validity: ${JWT_ACCESS_TOKEN_VALIDITY:3600000}    # 1시간 (밀리초)
+  secret: ${JWT_SECRET:ThisIsADevelopmentSecretKeyPleaseChangeInProduction32Bytes}
+  access-token-validity: ${JWT_ACCESS_TOKEN_VALIDITY:900000}    # 15분 (밀리초)
   refresh-token-validity: ${JWT_REFRESH_TOKEN_VALIDITY:604800000}  # 7일 (밀리초)
 
 # Security 설정

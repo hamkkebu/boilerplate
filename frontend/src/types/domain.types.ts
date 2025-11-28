@@ -47,10 +47,14 @@ export interface CreateSampleRequest {
  * 인증 관련 타입
  */
 export interface AuthUser {
+  id?: number;
   username: string;
   firstName: string;
   lastName: string;
   email?: string;
+  role?: string;
+  isActive?: boolean;
+  isVerified?: boolean;
 }
 
 export interface LoginRequest {
