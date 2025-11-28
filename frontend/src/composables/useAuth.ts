@@ -28,8 +28,14 @@ const isKeycloakMode = authMode === 'keycloak';
 
 /**
  * 앱 시작 시 localStorage에서 사용자 정보 자동 복원
+ * Keycloak 모드에서는 initAuth()에서 처리하므로 여기서는 JWT 모드만 복원
  */
 const initializeAuth = () => {
+  // Keycloak 모드에서는 세션 확인 후 복원하므로 여기서 복원하지 않음
+  if (authMode === 'keycloak') {
+    return;
+  }
+
   const userJson = localStorage.getItem('currentUser');
   if (userJson) {
     try {
@@ -43,7 +49,7 @@ const initializeAuth = () => {
   }
 };
 
-// 모듈 로드 시 자동으로 사용자 정보 복원
+// 모듈 로드 시 자동으로 사용자 정보 복원 (JWT 모드만)
 initializeAuth();
 
 export function useAuth() {
@@ -72,6 +78,12 @@ export function useAuth() {
         isActive: true,
         isVerified: true,
       };
+    } else {
+      // Keycloak 세션이 유효하지 않으면 localStorage 정리
+      currentUser.value = null;
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('currentUser');
     }
 
     return authenticated;
