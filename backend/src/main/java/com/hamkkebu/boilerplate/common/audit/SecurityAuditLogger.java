@@ -20,11 +20,8 @@ import java.time.LocalDateTime;
  *
  * <p>로깅 대상 이벤트:</p>
  * <ul>
- *   <li>로그인 성공/실패</li>
- *   <li>로그아웃</li>
  *   <li>회원가입</li>
  *   <li>회원 탈퇴</li>
- *   <li>토큰 갱신</li>
  *   <li>권한 거부 (ACCESS_DENIED)</li>
  * </ul>
  *
@@ -32,56 +29,14 @@ import java.time.LocalDateTime;
  * <pre>
  * [SECURITY_AUDIT] timestamp | event | userId | ip | status | details
  * </pre>
+ *
+ * <p>Note: 로그인/로그아웃/토큰 갱신은 Keycloak에서 처리합니다.</p>
  */
 @Slf4j
 @Aspect
 @Component
 @RequiredArgsConstructor
 public class SecurityAuditLogger {
-
-    /**
-     * 로그인 성공 로깅
-     */
-    @AfterReturning(
-            pointcut = "execution(* com.hamkkebu.boilerplate.service.AuthService.login(..))",
-            returning = "result"
-    )
-    public void logLoginSuccess(JoinPoint joinPoint, Object result) {
-        String userId = extractUserIdFromArgs(joinPoint);
-        String ip = getClientIP();
-
-        log.info("[SECURITY_AUDIT] {} | EVENT=LOGIN_SUCCESS | USER={} | IP={} | STATUS=SUCCESS",
-                LocalDateTime.now(), userId, ip);
-    }
-
-    /**
-     * 로그인 실패 로깅
-     */
-    @AfterThrowing(
-            pointcut = "execution(* com.hamkkebu.boilerplate.service.AuthService.login(..))",
-            throwing = "ex"
-    )
-    public void logLoginFailure(JoinPoint joinPoint, Exception ex) {
-        String userId = extractUserIdFromArgs(joinPoint);
-        String ip = getClientIP();
-
-        log.warn("[SECURITY_AUDIT] {} | EVENT=LOGIN_FAILURE | USER={} | IP={} | STATUS=FAILED | REASON={}",
-                LocalDateTime.now(), userId, ip, ex.getMessage());
-    }
-
-    /**
-     * 로그아웃 로깅
-     */
-    @AfterReturning(
-            pointcut = "execution(* com.hamkkebu.boilerplate.service.AuthService.logout(..))"
-    )
-    public void logLogout(JoinPoint joinPoint) {
-        String userId = getCurrentUserId();
-        String ip = getClientIP();
-
-        log.info("[SECURITY_AUDIT] {} | EVENT=LOGOUT | USER={} | IP={} | STATUS=SUCCESS",
-                LocalDateTime.now(), userId, ip);
-    }
 
     /**
      * 회원가입 로깅
@@ -109,20 +64,6 @@ public class SecurityAuditLogger {
         String ip = getClientIP();
 
         log.info("[SECURITY_AUDIT] {} | EVENT=USER_DELETION | USER={} | IP={} | STATUS=SUCCESS",
-                LocalDateTime.now(), userId, ip);
-    }
-
-    /**
-     * 토큰 갱신 로깅
-     */
-    @AfterReturning(
-            pointcut = "execution(* com.hamkkebu.boilerplate.service.AuthService.refresh(..))"
-    )
-    public void logTokenRefresh(JoinPoint joinPoint) {
-        String userId = getCurrentUserId();
-        String ip = getClientIP();
-
-        log.info("[SECURITY_AUDIT] {} | EVENT=TOKEN_REFRESH | USER={} | IP={} | STATUS=SUCCESS",
                 LocalDateTime.now(), userId, ip);
     }
 
