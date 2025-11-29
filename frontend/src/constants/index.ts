@@ -11,6 +11,7 @@ export const API_ENDPOINTS = {
   SAMPLE_BY_ID: (id: string) => `/api/v1/samples/${id}`,
   SAMPLE_CHECK_DUPLICATE: (id: string) => `/api/v1/samples/check/${id}`,
   SAMPLE_CHECK_NICKNAME_DUPLICATE: (nickname: string) => `/api/v1/samples/check/nickname/${nickname}`,
+  SAMPLE_IS_KEYCLOAK: (username: string) => `/api/v1/samples/username/${username}/keycloak`,
   SAMPLES_PAGE: '/api/v1/samples/page',
 
   // 인증 관련

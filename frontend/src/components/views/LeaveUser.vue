@@ -26,7 +26,8 @@
       </div>
 
       <form class="leave-form" @submit.prevent="confirmAndLeave">
-        <div class="input-group">
+        <!-- 일반 사용자만 비밀번호 입력 필요 (Keycloak 사용자는 숨김) -->
+        <div v-if="!isKeycloakUser" class="input-group">
           <label for="password" class="input-label">비밀번호 확인</label>
           <div class="input-wrapper">
             <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -44,6 +45,16 @@
           </div>
         </div>
 
+        <!-- Keycloak 사용자 안내 메시지 -->
+        <div v-else class="keycloak-notice">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 16v-4"></path>
+            <path d="M12 8h.01"></path>
+          </svg>
+          <span>SSO 계정은 비밀번호 확인 없이 탈퇴됩니다.</span>
+        </div>
+
         <div class="confirmation-checkbox">
           <label class="checkbox-label">
             <input type="checkbox" v-model="confirmed" required />
@@ -58,7 +69,7 @@
             </svg>
             <span>취소</span>
           </button>
-          <button type="submit" class="btn-leave" :disabled="!confirmed || !password">
+          <button type="submit" class="btn-leave" :disabled="!confirmed || (!isKeycloakUser && !password)">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -77,7 +88,7 @@ import { useRouter } from 'vue-router';
 import apiClient from '@/api/client';
 import { useApi } from '@/composables/useApi';
 import { useAuth } from '@/composables/useAuth';
-import { API_ENDPOINTS, ROUTES, SUCCESS_MESSAGES } from '@/constants';
+import { API_ENDPOINTS, ROUTES } from '@/constants';
 
 export default defineComponent({
   name: 'LeaveUser',
@@ -88,12 +99,28 @@ export default defineComponent({
 
     const password = ref('');
     const confirmed = ref(false);
+    const isKeycloakUser = ref(false);
 
-    onMounted(() => {
+    onMounted(async () => {
       // Keycloak 인증은 App.vue에서 initAuth로 처리됨
       if (!isAuthenticated.value) {
         alert('로그인이 필요합니다.');
         router.push(ROUTES.LOGIN);
+        return;
+      }
+
+      // Keycloak 사용자 여부 확인
+      if (currentUser.value?.username) {
+        try {
+          const response = await apiClient.get(
+            API_ENDPOINTS.SAMPLE_IS_KEYCLOAK(currentUser.value.username)
+          );
+          isKeycloakUser.value = response.data?.data === true;
+        } catch (error) {
+          console.error('Keycloak 사용자 확인 실패:', error);
+          // 기본값: Keycloak 사용자로 가정 (SSO 모드에서는 대부분 Keycloak 사용자)
+          isKeycloakUser.value = true;
+        }
       }
     });
 
@@ -103,7 +130,8 @@ export default defineComponent({
         return;
       }
 
-      if (!password.value) {
+      // 일반 사용자만 비밀번호 필요
+      if (!isKeycloakUser.value && !password.value) {
         alert('비밀번호를 입력해주세요.');
         return;
       }
@@ -128,16 +156,21 @@ export default defineComponent({
         return;
       }
 
-      await execute(
-        () =>
-          apiClient.delete(API_ENDPOINTS.SAMPLE_BY_ID(currentUser.value!.username), {
+      // Keycloak 사용자는 비밀번호 없이 요청
+      const requestConfig = isKeycloakUser.value
+        ? {}
+        : {
             data: {
               password: password.value,
             },
-            headers: {
-              'Refresh-Token': localStorage.getItem('refreshToken') || '',
-            },
-          }),
+          };
+
+      await execute(
+        () =>
+          apiClient.delete(
+            API_ENDPOINTS.SAMPLE_BY_ID(currentUser.value!.username),
+            requestConfig
+          ),
         {
           onSuccess: () => {
             alert('회원 탈퇴가 완료되었습니다.');
@@ -155,6 +188,7 @@ export default defineComponent({
     return {
       password,
       confirmed,
+      isKeycloakUser,
       loading,
       confirmAndLeave,
       goBack,
@@ -325,6 +359,25 @@ export default defineComponent({
 
 .input-field::placeholder {
   color: #cbd5e0;
+}
+
+.keycloak-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #ebf8ff;
+  border: 2px solid #90cdf4;
+  border-radius: 12px;
+  color: #2b6cb0;
+  font-size: 14px;
+}
+
+.keycloak-notice svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: #3182ce;
 }
 
 .confirmation-checkbox {

@@ -44,8 +44,15 @@ public class Sample extends BaseEntity {
     private String samplePhone;
 
     @JsonIgnore
-    @Column(name = "sample_password", nullable = false)
+    @Column(name = "sample_password")
     private String samplePassword;
+
+    /**
+     * Keycloak 사용자 ID (sub claim)
+     * Keycloak SSO 연동을 위한 외부 식별자
+     */
+    @Column(name = "keycloak_user_id", unique = true, length = 36)
+    private String keycloakUserId;
 
     @Column(name = "sample_country")
     private String sampleCountry;

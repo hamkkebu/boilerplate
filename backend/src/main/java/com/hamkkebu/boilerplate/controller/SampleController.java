@@ -178,19 +178,40 @@ public class SampleController {
     }
 
     /**
-     * Sample 삭제 (비밀번호 검증)
+     * Keycloak 사용자 여부 확인
+     * GET /api/v1/samples/username/{sampleId}/keycloak
+     */
+    @Operation(
+        summary = "Keycloak 사용자 여부 확인",
+        description = "사용자가 Keycloak SSO 사용자인지 확인합니다."
+    )
+    @GetMapping("/username/{sampleId}/keycloak")
+    public ApiResponse<Boolean> isKeycloakUser(
+            @PathVariable @Size(min = 3, max = 20, message = "sampleId는 3자 이상 20자 이하여야 합니다") String sampleId) {
+        log.debug("Checking if user is Keycloak user: sampleId={}", sampleId);
+        boolean isKeycloak = service.isKeycloakUser(sampleId);
+        return ApiResponse.success(isKeycloak);
+    }
+
+    /**
+     * Sample 삭제 (Keycloak 사용자는 비밀번호 불필요)
      * DELETE /api/v1/samples/{sampleId}
      *
      * <p>Spring Security의 인증 정보를 사용하여 현재 사용자를 확인합니다.</p>
      * <p>Keycloak JWT 토큰이 자동으로 사용됩니다.</p>
+     * <p>Keycloak 사용자는 비밀번호 없이 탈퇴 가능합니다.</p>
      */
+    @Operation(
+        summary = "회원 탈퇴",
+        description = "사용자 계정을 삭제합니다. Keycloak 사용자는 비밀번호 없이, 일반 사용자는 비밀번호 확인이 필요합니다."
+    )
     @DeleteMapping("/{sampleId}")
     public ApiResponse<Void> deleteSample(
             @PathVariable @Size(min = 3, max = 20, message = "sampleId는 3자 이상 20자 이하여야 합니다") String sampleId,
-            @Valid @RequestBody DeleteSampleRequest request,
+            @RequestBody(required = false) DeleteSampleRequest request,
             Authentication authentication) {
         String userId = authentication.getName();
-        log.info("Deleting sample with password verification: sampleId={}, userId={}", sampleId, userId);
+        log.info("Deleting sample: sampleId={}, userId={}", sampleId, userId);
 
         // 권한 검증: 본인 계정만 삭제 가능
         if (!userId.equals(sampleId)) {
@@ -201,7 +222,8 @@ public class SampleController {
             );
         }
 
-        service.deleteSample(sampleId, request.getPassword());
+        String password = request != null ? request.getPassword() : null;
+        service.deleteSample(sampleId, password);
 
         return ApiResponse.success("Sample이 성공적으로 삭제되었습니다");
     }

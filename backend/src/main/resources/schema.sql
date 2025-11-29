@@ -15,7 +15,8 @@ CREATE TABLE tbl_boilerplate_sample (
     sample_nickname VARCHAR(50),
     sample_email VARCHAR(100),
     sample_phone VARCHAR(20),
-    sample_password VARCHAR(255) NOT NULL,
+    sample_password VARCHAR(255),                 -- Keycloak 사용자는 NULL 가능
+    keycloak_user_id VARCHAR(36) UNIQUE,          -- Keycloak SSO 연동용 (sub claim)
     sample_country VARCHAR(50),
     sample_city VARCHAR(50),
     sample_state VARCHAR(50),
@@ -61,6 +62,7 @@ CREATE UNIQUE INDEX idx_sample_nickname_active
 -- 조회 성능을 위한 일반 인덱스
 CREATE INDEX idx_sample_id ON tbl_boilerplate_sample(sample_id);
 CREATE INDEX idx_sample_nickname ON tbl_boilerplate_sample(sample_nickname);
+CREATE INDEX idx_keycloak_user_id ON tbl_boilerplate_sample(keycloak_user_id);
 
 -- ==========================================
 -- Transactional Outbox 테이블

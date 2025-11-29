@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 /**
  * Sample Service
@@ -200,11 +201,11 @@ public class SampleService {
      *
      * <p>물리적 삭제 대신 논리적 삭제를 수행합니다.</p>
      * <p>BaseEntity의 delete() 메서드를 호출하여 isDeleted 플래그를 true로 설정합니다.</p>
-     * <p>비밀번호를 검증한 후 삭제를 수행합니다.</p>
-     * <p>Keycloak 세션 관리는 Keycloak 서버에서 처리됩니다.</p>
+     * <p>Keycloak 사용자는 비밀번호 검증 없이 삭제됩니다.</p>
+     * <p>일반 사용자는 비밀번호를 검증한 후 삭제를 수행합니다.</p>
      *
      * @param sampleId Sample ID
-     * @param password 비밀번호
+     * @param password 비밀번호 (Keycloak 사용자는 null 가능)
      * @throws BusinessException Sample을 찾을 수 없거나 비밀번호가 일치하지 않는 경우
      */
     @Transactional
@@ -216,8 +217,22 @@ public class SampleService {
                 "삭제할 Sample을 찾을 수 없습니다: sampleId=" + sampleId
             ));
 
-        // 비밀번호 검증
-        passwordValidator.validatePassword(password, sample.getSamplePassword(), sampleId);
+        // Keycloak 사용자 여부 확인
+        boolean isKeycloakUser = StringUtils.hasText(sample.getKeycloakUserId());
+
+        if (isKeycloakUser) {
+            // Keycloak 사용자: 비밀번호 검증 없이 삭제
+            log.info("Keycloak 사용자 삭제: sampleId={}, keycloakUserId={}", sampleId, sample.getKeycloakUserId());
+        } else {
+            // 일반 사용자: 비밀번호 검증 필요
+            if (!StringUtils.hasText(password)) {
+                throw new BusinessException(
+                    ErrorCode.VALIDATION_FAILED,
+                    "비밀번호를 입력해주세요"
+                );
+            }
+            passwordValidator.validatePassword(password, sample.getSamplePassword(), sampleId);
+        }
 
         // Soft Delete 수행
         sample.delete();
@@ -225,6 +240,19 @@ public class SampleService {
         // 명시적으로 저장 (변경 감지로 자동 저장되지만, 명확성을 위해)
         repository.save(sample);
 
-        log.info("Sample soft deleted: sampleId={}, deletedAt={}", sampleId, sample.getDeletedAt());
+        log.info("Sample soft deleted: sampleId={}, deletedAt={}, isKeycloakUser={}", sampleId, sample.getDeletedAt(), isKeycloakUser);
+    }
+
+    /**
+     * Keycloak 사용자 여부 확인
+     *
+     * @param sampleId Sample ID
+     * @return Keycloak 사용자이면 true
+     */
+    @Transactional(readOnly = true)
+    public boolean isKeycloakUser(String sampleId) {
+        return repository.findBySampleIdAndIsDeletedFalse(sampleId)
+            .map(sample -> StringUtils.hasText(sample.getKeycloakUserId()))
+            .orElse(false);
     }
 }
