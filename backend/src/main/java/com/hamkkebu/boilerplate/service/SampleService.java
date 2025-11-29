@@ -7,7 +7,6 @@ import com.hamkkebu.boilerplate.common.dto.PageResponseDto;
 import com.hamkkebu.boilerplate.common.exception.BusinessException;
 import com.hamkkebu.boilerplate.common.exception.ErrorCode;
 import com.hamkkebu.boilerplate.common.security.PasswordValidator;
-import com.hamkkebu.boilerplate.common.security.RefreshTokenWhitelistService;
 import com.hamkkebu.boilerplate.data.dto.SampleRequest;
 import com.hamkkebu.boilerplate.data.dto.SampleResponse;
 import com.hamkkebu.boilerplate.data.entity.Sample;
@@ -43,7 +42,6 @@ public class SampleService {
     private final ApplicationEventPublisher publisher;
     private final PasswordEncoder passwordEncoder;
     private final PasswordValidator passwordValidator;
-    private final RefreshTokenWhitelistService refreshTokenWhitelistService;
 
     /**
      * Sample ID 중복 확인
@@ -203,15 +201,14 @@ public class SampleService {
      * <p>물리적 삭제 대신 논리적 삭제를 수행합니다.</p>
      * <p>BaseEntity의 delete() 메서드를 호출하여 isDeleted 플래그를 true로 설정합니다.</p>
      * <p>비밀번호를 검증한 후 삭제를 수행합니다.</p>
-     * <p>회원 탈퇴 시 refreshToken을 Whitelist에서 제거합니다.</p>
+     * <p>Keycloak 세션 관리는 Keycloak 서버에서 처리됩니다.</p>
      *
      * @param sampleId Sample ID
      * @param password 비밀번호
-     * @param refreshToken 리프레시 토큰 (Whitelist에서 제거, optional)
      * @throws BusinessException Sample을 찾을 수 없거나 비밀번호가 일치하지 않는 경우
      */
     @Transactional
-    public void deleteSample(String sampleId, String password, String refreshToken) {
+    public void deleteSample(String sampleId, String password) {
         // Sample 조회
         Sample sample = repository.findBySampleIdAndIsDeletedFalse(sampleId)
             .orElseThrow(() -> new BusinessException(
@@ -229,9 +226,5 @@ public class SampleService {
         repository.save(sample);
 
         log.info("Sample soft deleted: sampleId={}, deletedAt={}", sampleId, sample.getDeletedAt());
-
-        // RefreshToken을 Whitelist에서 제거
-        refreshTokenWhitelistService.removeFromWhitelist(sampleId);
-        log.info("RefreshToken removed from whitelist for deleted user: {}", sampleId);
     }
 }

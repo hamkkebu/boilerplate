@@ -1,16 +1,8 @@
 import axios, { AxiosInstance, AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import type { ApiResponse } from '@/types/api.types';
-import type { TokenResponse } from '@/types/domain.types';
 
 /**
- * 인증 모드
- */
-type AuthMode = 'keycloak' | 'jwt';
-const authMode: AuthMode = (process.env.VUE_APP_AUTH_MODE as AuthMode) || 'jwt';
-const isKeycloakMode = authMode === 'keycloak';
-
-/**
- * 토큰 제공자 (Keycloak 모드에서 사용)
+ * 토큰 제공자 (Keycloak에서 토큰 가져오기)
  * useAuth에서 설정됨
  */
 let tokenProvider: (() => Promise<string | null>) | null = null;
@@ -34,27 +26,14 @@ const apiClient: AxiosInstance = axios.create({
 });
 
 /**
- * Token Refresh 관련 상태 (JWT 모드에서만 사용)
- */
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value?: any) => void;
-  reject: (reason?: any) => void;
-}> = [];
-
-/**
  * 요청 인터셉터
  */
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     let token: string | null = null;
 
-    if (isKeycloakMode && tokenProvider) {
-      // Keycloak 모드: 토큰 제공자에서 토큰 가져오기
+    if (tokenProvider) {
       token = await tokenProvider();
-    } else {
-      // JWT 모드: localStorage에서 토큰 가져오기
-      token = localStorage.getItem('authToken');
     }
 
     if (token && config.headers) {
@@ -75,64 +54,6 @@ apiClient.interceptors.request.use(
 );
 
 /**
- * 대기 중인 요청 처리
- */
-const processQueue = (error: AxiosError | null, token: string | null = null) => {
-  failedQueue.forEach((promise) => {
-    if (error) {
-      promise.reject(error);
-    } else {
-      promise.resolve(token);
-    }
-  });
-
-  failedQueue = [];
-};
-
-/**
- * Token Refresh 함수
- */
-const refreshAccessToken = async (): Promise<string> => {
-  const refreshToken = localStorage.getItem('refreshToken');
-
-  if (!refreshToken) {
-    throw new Error('No refresh token available');
-  }
-
-  try {
-    // Refresh API 호출 (인터셉터를 거치지 않도록 새로운 axios 인스턴스 사용)
-    const response = await axios.post<ApiResponse<TokenResponse>>(
-      `${process.env.VUE_APP_baseApiURL || ''}/api/v1/auth/refresh`,
-      null,
-      {
-        headers: {
-          'Refresh-Token': refreshToken,
-        },
-      }
-    );
-
-    const tokenData = response.data.data;
-
-    if (!tokenData) {
-      throw new Error('Invalid token response');
-    }
-
-    // 새로운 토큰 저장
-    localStorage.setItem('authToken', tokenData.accessToken);
-    localStorage.setItem('refreshToken', tokenData.refreshToken);
-
-    return tokenData.accessToken;
-  } catch (error) {
-    // Refresh token도 만료된 경우
-    console.error('[Token Refresh Failed]', error);
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('currentUser');
-    throw error;
-  }
-};
-
-/**
  * 응답 인터셉터
  */
 apiClient.interceptors.response.use(
@@ -145,70 +66,11 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError<ApiResponse<any>>) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-
-    // 401 에러 처리
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      // Keycloak 모드: Keycloak이 토큰 갱신을 자동으로 처리
-      // 여기서 401이 발생했다면 세션이 완전히 만료된 것
-      if (isKeycloakMode) {
-        console.log('[Keycloak] Session expired, redirecting to login...');
-        handleTokenExpired();
-        return Promise.reject(error);
-      }
-
-      // JWT 모드: 자체 refresh token으로 갱신 시도
-      if (!localStorage.getItem('refreshToken')) {
-        handleTokenExpired();
-        return Promise.reject(error);
-      }
-
-      // Refresh API 자체가 실패한 경우는 재시도하지 않음
-      if (originalRequest.url?.includes('/auth/refresh')) {
-        console.error('[Refresh API Failed]');
-        handleTokenExpired();
-        return Promise.reject(error);
-      }
-
-      // 이미 토큰 갱신 중인 경우, 대기 큐에 추가
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
-            }
-            return apiClient(originalRequest);
-          })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
-      }
-
-      // 토큰 갱신 시작
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        const newToken = await refreshAccessToken();
-
-        // 대기 중인 요청들에게 새로운 토큰 전달
-        processQueue(null, newToken);
-
-        // 현재 요청 재시도
-        if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        }
-        return apiClient(originalRequest);
-      } catch (refreshError) {
-        // Refresh 실패 시 대기 중인 요청들 모두 reject
-        processQueue(error, null);
-        handleTokenExpired();
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
+    // 401 에러 처리: Keycloak 세션 만료
+    if (error.response?.status === 401) {
+      console.log('[Keycloak] Session expired, redirecting to login...');
+      handleTokenExpired();
+      return Promise.reject(error);
     }
 
     // 401 이외의 에러 처리
@@ -222,7 +84,6 @@ apiClient.interceptors.response.use(
         // 검증 에러(COMMON-009)인 경우 상세 에러 메시지 추출
         if (data.error.code === 'COMMON-009' && data.error.details) {
           const details = data.error.details;
-          // details는 { fieldName: errorMessage } 형태의 객체
           if (typeof details === 'object' && details !== null) {
             const errorMessages = Object.entries(details)
               .map(([field, message]) => `${message}`)
@@ -235,8 +96,7 @@ apiClient.interceptors.response.use(
 
         console.error(`[API Error ${status}]`, errorMessage);
         alert(errorMessage);
-      } else if (status !== 401) {
-        // 일반 HTTP 에러 (401은 이미 처리했으므로 제외)
+      } else {
         handleHttpError(status);
       }
     } else if (error.request) {
@@ -254,22 +114,11 @@ apiClient.interceptors.response.use(
 );
 
 /**
- * 토큰 만료 처리
+ * 토큰 만료 처리 (Keycloak 로그인 페이지로 리다이렉트)
  */
 function handleTokenExpired(): void {
   alert('세션이 만료되었습니다. 다시 로그인해주세요.');
-
-  if (isKeycloakMode) {
-    // Keycloak 모드: Keycloak 로그인 페이지로 리다이렉트
-    // App.vue에서 initAuth()가 호출되어 Keycloak 로그인 페이지로 이동
-    window.location.href = '/';
-  } else {
-    // JWT 모드: localStorage 정리 후 로그인 페이지로 이동
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('currentUser');
-    window.location.href = '/login';
-  }
+  window.location.href = '/';
 }
 
 /**
@@ -279,9 +128,6 @@ function handleHttpError(status: number): void {
   switch (status) {
     case 400:
       alert('잘못된 요청입니다.');
-      break;
-    case 401:
-      // 401 에러는 interceptor에서 처리하므로 여기서는 무시
       break;
     case 403:
       alert('접근 권한이 없습니다.');

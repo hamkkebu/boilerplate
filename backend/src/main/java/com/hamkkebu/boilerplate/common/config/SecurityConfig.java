@@ -1,11 +1,8 @@
 package com.hamkkebu.boilerplate.common.config;
 
-import com.hamkkebu.boilerplate.common.security.JwtAuthenticationEntryPoint;
-import com.hamkkebu.boilerplate.common.security.JwtAuthenticationFilter;
 import com.hamkkebu.boilerplate.common.security.KeycloakJwtAuthenticationConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -19,7 +16,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -28,10 +24,9 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Spring Security 설정
+ * Spring Security 설정 (Keycloak OAuth2 전용)
  *
- * <p>Keycloak OAuth2 또는 자체 JWT 인증을 지원합니다.</p>
- * <p>keycloak.enabled=true 설정 시 Keycloak OAuth2 Resource Server로 동작합니다.</p>
+ * <p>Keycloak OAuth2 Resource Server로 동작합니다.</p>
  *
  * <p>주요 설정:</p>
  * <ul>
@@ -48,19 +43,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final KeycloakJwtAuthenticationConverter keycloakJwtAuthenticationConverter;
     private final Environment environment;
 
     @Value("${cors.allowed-origins:http://localhost:*,http://127.0.0.1:*}")
     private String[] allowedOrigins;
-
-    @Value("${keycloak.enabled:false}")
-    private boolean keycloakEnabled;
-
-    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}")
-    private String jwtIssuerUri;
 
     @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri:}")
     private String jwkSetUri;
@@ -82,19 +69,10 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                // 예외 처리 설정
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                )
-
                 // 요청별 권한 설정
                 .authorizeHttpRequests(auth -> {
                     // 인증 없이 접근 가능한 엔드포인트
                     auth.requestMatchers(
-                            // Auth API 중 인증 불필요한 엔드포인트만 허용
-                            "/api/v1/auth/login",
-                            "/api/v1/auth/refresh",
-                            "/api/v1/auth/validate",
                             // 회원가입 및 중복 확인
                             "/api/v1/users/check/**",
                             "/api/v1/samples/check/**"
@@ -154,31 +132,22 @@ public class SecurityConfig {
                         .permissionsPolicy(permissions -> permissions
                                 .policy("geolocation=(), microphone=(), camera=()")
                         )
-                );
+                )
 
-        // Keycloak OAuth2 Resource Server 또는 자체 JWT 필터 적용
-        if (keycloakEnabled) {
-            http.oauth2ResourceServer(oauth2 -> oauth2
-                    .jwt(jwt -> jwt
-                            .jwtAuthenticationConverter(keycloakJwtAuthenticationConverter)
-                    )
-            );
-        } else {
-            // 기존 JWT 인증 필터 사용
-            http.addFilterBefore(
-                    jwtAuthenticationFilter,
-                    UsernamePasswordAuthenticationFilter.class
-            );
-        }
+                // Keycloak OAuth2 Resource Server 설정
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt
+                                .jwtAuthenticationConverter(keycloakJwtAuthenticationConverter)
+                        )
+                );
 
         return http.build();
     }
 
     /**
-     * JWT Decoder (Keycloak 사용 시)
+     * JWT Decoder (Keycloak JWK Set URI 사용)
      */
     @Bean
-    @ConditionalOnProperty(name = "keycloak.enabled", havingValue = "true")
     public JwtDecoder jwtDecoder() {
         if (jwkSetUri != null && !jwkSetUri.isBlank()) {
             return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
@@ -202,7 +171,6 @@ public class SecurityConfig {
 
         configuration.setAllowedHeaders(List.of(
                 "Authorization",
-                "Refresh-Token",
                 "Content-Type",
                 "Accept",
                 "Origin",
@@ -211,7 +179,7 @@ public class SecurityConfig {
 
         configuration.setAllowCredentials(true);
 
-        configuration.setExposedHeaders(List.of("Authorization", "Refresh-Token"));
+        configuration.setExposedHeaders(List.of("Authorization"));
 
         configuration.setMaxAge(3600L);
 

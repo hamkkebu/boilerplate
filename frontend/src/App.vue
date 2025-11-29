@@ -15,20 +15,16 @@ import { useAuth } from '@/composables/useAuth';
 export default defineComponent({
   name: 'App',
   setup() {
-    const { initAuth, isKeycloakMode } = useAuth();
-    const isLoading = ref(false);
+    const { initAuth } = useAuth();
+    const isLoading = ref(true);
 
     onMounted(async () => {
-      // Keycloak 모드일 때만 초기화 로딩 표시
-      if (isKeycloakMode) {
-        isLoading.value = true;
-        try {
-          await initAuth();
-        } catch (error) {
-          console.error('Auth initialization failed:', error);
-        } finally {
-          isLoading.value = false;
-        }
+      try {
+        await initAuth();
+      } catch (error) {
+        console.error('Auth initialization failed:', error);
+      } finally {
+        isLoading.value = false;
       }
     });
 

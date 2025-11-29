@@ -182,14 +182,13 @@ public class SampleController {
      * DELETE /api/v1/samples/{sampleId}
      *
      * <p>Spring Security의 인증 정보를 사용하여 현재 사용자를 확인합니다.</p>
-     * <p>Swagger의 Authorize 버튼으로 설정한 JWT 토큰이 자동으로 사용됩니다.</p>
+     * <p>Keycloak JWT 토큰이 자동으로 사용됩니다.</p>
      */
     @DeleteMapping("/{sampleId}")
     public ApiResponse<Void> deleteSample(
             @PathVariable @Size(min = 3, max = 20, message = "sampleId는 3자 이상 20자 이하여야 합니다") String sampleId,
             @Valid @RequestBody DeleteSampleRequest request,
-            Authentication authentication,
-            @RequestHeader(value = "Refresh-Token", required = false) String refreshToken) {
+            Authentication authentication) {
         String userId = authentication.getName();
         log.info("Deleting sample with password verification: sampleId={}, userId={}", sampleId, userId);
 
@@ -202,7 +201,7 @@ public class SampleController {
             );
         }
 
-        service.deleteSample(sampleId, request.getPassword(), refreshToken);
+        service.deleteSample(sampleId, request.getPassword());
 
         return ApiResponse.success("Sample이 성공적으로 삭제되었습니다");
     }
