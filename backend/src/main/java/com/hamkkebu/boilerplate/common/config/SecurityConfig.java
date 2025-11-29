@@ -171,6 +171,7 @@ public class SecurityConfig {
 
         configuration.setAllowedHeaders(List.of(
                 "Authorization",
+                "Refresh-Token",
                 "Content-Type",
                 "Accept",
                 "Origin",
@@ -179,7 +180,7 @@ public class SecurityConfig {
 
         configuration.setAllowCredentials(true);
 
-        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setExposedHeaders(List.of("Authorization", "Refresh-Token"));
 
         configuration.setMaxAge(3600L);
 
