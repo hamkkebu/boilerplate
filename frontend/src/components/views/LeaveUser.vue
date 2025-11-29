@@ -84,17 +84,14 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const { loading, execute } = useApi();
-    const { currentUser, restoreUser, logout } = useAuth();
+    const { currentUser, logout, isAuthenticated } = useAuth();
 
     const password = ref('');
     const confirmed = ref(false);
 
-    // 컴포넌트 마운트 시 사용자 정보 복원
     onMounted(() => {
-      restoreUser();
-
-      // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
-      if (!currentUser.value) {
+      // Keycloak 인증은 App.vue에서 initAuth로 처리됨
+      if (!isAuthenticated.value) {
         alert('로그인이 필요합니다.');
         router.push(ROUTES.LOGIN);
       }
