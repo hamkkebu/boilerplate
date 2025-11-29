@@ -135,7 +135,7 @@
   "identityProviders": [],
   "identityProviderMappers": [],
   "smtpServer": {},
-  "loginTheme": "keycloak",
+  "loginTheme": "hamkkebu",
   "accountTheme": "keycloak.v2",
   "adminTheme": "keycloak.v2",
   "emailTheme": "keycloak",

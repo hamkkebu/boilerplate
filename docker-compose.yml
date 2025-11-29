@@ -184,6 +184,7 @@ services:
       KC_HTTP_ENABLED: true
     volumes:
       - ./infrastructure/keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+      - ./infrastructure/keycloak/themes/hamkkebu:/opt/keycloak/themes/hamkkebu:ro
     depends_on:
       keycloak-db:
         condition: service_healthy
