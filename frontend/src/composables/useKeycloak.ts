@@ -37,6 +37,14 @@ const token = ref<string | null>(null);
 const refreshToken = ref<string | null>(null);
 
 /**
+ * Direct Login 결과 인터페이스
+ */
+interface DirectLoginResult {
+  success: boolean;
+  error?: string;
+}
+
+/**
  * 기본 Keycloak 설정
  */
 const defaultConfig: KeycloakConfig = {
@@ -119,7 +127,7 @@ export function useKeycloak() {
   };
 
   /**
-   * 로그인
+   * 로그인 (Keycloak 로그인 페이지로 리다이렉트)
    */
   const login = async (redirectUri?: string): Promise<void> => {
     if (!keycloakInstance) {
@@ -129,6 +137,81 @@ export function useKeycloak() {
     await keycloakInstance?.login({
       redirectUri: redirectUri || window.location.href,
     });
+  };
+
+  /**
+   * Direct Login (Resource Owner Password Credentials)
+   * 커스텀 로그인 폼에서 사용자명/비밀번호를 직접 전송
+   */
+  const directLogin = async (username: string, password: string): Promise<DirectLoginResult> => {
+    const config = defaultConfig;
+    const tokenUrl = `${config.url}/realms/${config.realm}/protocol/openid-connect/token`;
+
+    try {
+      const response = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'password',
+          client_id: config.clientId,
+          username,
+          password,
+          scope: 'openid profile email',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        let errorMessage = '로그인에 실패했습니다.';
+
+        if (errorData.error === 'invalid_grant') {
+          errorMessage = '아이디 또는 비밀번호가 올바르지 않습니다.';
+        } else if (errorData.error_description) {
+          errorMessage = errorData.error_description;
+        }
+
+        return { success: false, error: errorMessage };
+      }
+
+      const tokenData = await response.json();
+
+      // 토큰 저장
+      token.value = tokenData.access_token;
+      refreshToken.value = tokenData.refresh_token;
+      isAuthenticated.value = true;
+
+      // 토큰 파싱하여 사용자 정보 추출
+      const tokenParts = tokenData.access_token.split('.');
+      const payload = JSON.parse(atob(tokenParts[1]));
+
+      const realmAccess = payload.realm_access as { roles?: string[] } | undefined;
+      const roles = realmAccess?.roles || [];
+
+      currentUser.value = {
+        id: payload.sub || '',
+        username: payload.preferred_username || '',
+        email: payload.email || '',
+        firstName: payload.given_name || '',
+        lastName: payload.family_name || '',
+        roles,
+      };
+
+      // Keycloak 인스턴스 초기화 (세션 관리용)
+      if (!keycloakInstance) {
+        keycloakInstance = new Keycloak({
+          url: config.url,
+          realm: config.realm,
+          clientId: config.clientId,
+        });
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Direct login failed:', error);
+      return { success: false, error: '로그인 중 오류가 발생했습니다.' };
+    }
   };
 
   /**
@@ -296,6 +379,7 @@ export function useKeycloak() {
     // 메서드
     init,
     login,
+    directLogin,
     logout,
     register,
     accountManagement,
