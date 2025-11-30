@@ -367,9 +367,19 @@ export function useKeycloak() {
       return null;
     }
 
-    // 토큰이 만료 예정이면 갱신
-    if (keycloakInstance.isTokenExpired(30)) {
-      await refreshTokens();
+    // 인증되지 않은 경우 null 반환
+    if (!isAuthenticated.value) {
+      return null;
+    }
+
+    try {
+      // 토큰이 만료 예정이면 갱신
+      if (keycloakInstance.isTokenExpired(30)) {
+        await refreshTokens();
+      }
+    } catch (error) {
+      console.debug('[Keycloak] Token refresh failed:', error);
+      return null;
     }
 
     return keycloakInstance.token || null;
