@@ -350,6 +350,13 @@ export function useKeycloak() {
    * Access Token 가져오기
    */
   const getToken = async (): Promise<string | null> => {
+    // Direct Login으로 얻은 토큰이 있는 경우
+    if (token.value) {
+      // TODO: Direct Login 토큰 만료 체크 및 갱신 로직 추가 필요
+      return token.value;
+    }
+
+    // Keycloak SSO로 얻은 토큰인 경우
     if (!keycloakInstance) {
       return null;
     }
