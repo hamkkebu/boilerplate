@@ -3,7 +3,7 @@
   "enabled": true,
   "displayName": "함께부",
   "displayNameHtml": "<div class=\"kc-logo-text\"><span>함께부</span></div>",
-  "registrationAllowed": true,
+  "registrationAllowed": false,
   "registrationEmailAsUsername": false,
   "rememberMe": true,
   "verifyEmail": false,
