@@ -336,6 +336,12 @@ export function useKeycloak() {
    * 특정 역할 보유 여부 확인
    */
   const hasRole = (role: string): boolean => {
+    // Direct Login으로 얻은 사용자 정보가 있는 경우
+    if (currentUser.value?.roles) {
+      return currentUser.value.roles.includes(role);
+    }
+
+    // Keycloak SSO로 인증된 경우
     return keycloakInstance?.hasRealmRole(role) || false;
   };
 
