@@ -1,5 +1,5 @@
 /* Hamkkebu Custom Keycloak Theme */
-/* Dark Theme with Glassmorphism Design */
+/* Matching auth-service login form design */
 
 /* ===========================================
    Google Fonts Import
@@ -22,14 +22,15 @@
 
   /* Gradient Accents */
   --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  --gradient-accent: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+  --gradient-brand: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
   --gradient-success: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   --gradient-error: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 
   /* Text Colors */
   --text-primary: rgba(255, 255, 255, 0.95);
-  --text-secondary: rgba(255, 255, 255, 0.6);
-  --text-tertiary: rgba(255, 255, 255, 0.4);
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-tertiary: rgba(255, 255, 255, 0.5);
+  --text-muted: rgba(255, 255, 255, 0.3);
 
   /* Accent Colors */
   --accent-purple: #6366f1;
@@ -45,7 +46,7 @@
   box-sizing: border-box;
 }
 
-/* Dark Background with Animated Gradient */
+/* Dark Background with Gradient */
 body,
 .login-pf body,
 html {
@@ -54,9 +55,12 @@ html {
   min-height: 100vh;
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
 }
 
-/* Floating Orbs Background Effect */
+/* ===========================================
+   Floating Orbs Background Effect
+   =========================================== */
 body::before {
   content: '';
   position: fixed;
@@ -66,7 +70,7 @@ body::before {
   height: 500px;
   background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
   border-radius: 50%;
-  filter: blur(60px);
+  filter: blur(80px);
   animation: pulse 8s ease-in-out infinite;
   pointer-events: none;
   z-index: 0;
@@ -81,8 +85,24 @@ body::after {
   height: 400px;
   background: radial-gradient(circle, rgba(236, 72, 153, 0.12) 0%, transparent 70%);
   border-radius: 50%;
-  filter: blur(60px);
+  filter: blur(80px);
   animation: pulse 10s ease-in-out infinite reverse;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Third Orb via additional element */
+.login-pf::before {
+  content: '';
+  position: fixed;
+  top: 30%;
+  left: 10%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: pulse 12s ease-in-out infinite;
   pointer-events: none;
   z-index: 0;
 }
@@ -103,17 +123,19 @@ body::after {
   }
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* ===========================================
-   Hide Default Elements
+   Hide Default Keycloak Elements
    =========================================== */
 #kc-header-wrapper,
 .kc-logo-text,
-.login-pf-page .login-pf-brand {
+.login-pf-page .login-pf-brand,
+#kc-header,
+.pf-c-login__header,
+.pf-c-login__footer {
   display: none !important;
 }
 
@@ -129,22 +151,37 @@ body::after {
 }
 
 /* ===========================================
+   Main Container
+   =========================================== */
+.login-pf .container-fluid,
+.login-pf-page,
+#kc-container,
+#kc-content {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 100vh !important;
+  padding: 20px !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===========================================
    Login Card - Glassmorphism
    =========================================== */
 #kc-form-wrapper,
-.card-pf,
-#kc-login,
-#kc-register,
+#kc-form,
 #kc-content-wrapper,
-.login-pf-page .card-pf {
+.card-pf {
   background: var(--glass-bg) !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
   border: 1px solid var(--glass-border) !important;
   border-radius: 24px !important;
   padding: 48px 40px !important;
+  width: 100% !important;
   max-width: 420px !important;
-  margin: 40px auto !important;
+  margin: 0 auto !important;
   box-shadow: var(--glass-shadow) !important;
   animation: slideUp 0.6s ease-out;
   position: relative;
@@ -167,11 +204,19 @@ body::after {
   pointer-events: none;
 }
 
-/* Login container */
-.login-pf .container-fluid {
-  padding-top: 60px;
-  position: relative;
-  z-index: 1;
+/* ===========================================
+   Brand Icon (Logo Area)
+   =========================================== */
+#kc-form::before,
+#kc-form-wrapper::after {
+  content: '';
+  display: block;
+  width: 64px;
+  height: 64px;
+  background: var(--gradient-brand);
+  border-radius: 16px;
+  margin: 0 auto 24px;
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
 }
 
 /* ===========================================
@@ -188,11 +233,13 @@ body::after {
 }
 
 /* Subtitle styling */
-.login-pf .instruction {
-  color: var(--text-secondary) !important;
-  font-size: 14px !important;
+.login-pf .instruction,
+#kc-form-wrapper > p,
+.pf-c-login__main-body > p {
+  color: var(--text-tertiary) !important;
+  font-size: 15px !important;
   text-align: center !important;
-  margin-bottom: 24px !important;
+  margin-bottom: 36px !important;
 }
 
 /* ===========================================
@@ -206,8 +253,8 @@ label,
   font-size: 13px !important;
   font-weight: 500 !important;
   color: var(--text-secondary) !important;
-  margin-bottom: 8px !important;
-  letter-spacing: 0.3px !important;
+  margin-bottom: 6px !important;
+  display: block !important;
 }
 
 /* Input Fields */
@@ -225,15 +272,20 @@ input.pf-c-form-control,
 #user\.attributes\.phoneNumber {
   width: 100% !important;
   padding: 14px 16px !important;
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid var(--glass-border) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 12px !important;
   font-size: 15px !important;
   color: var(--text-primary) !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: all 0.3s ease !important;
   outline: none !important;
   box-sizing: border-box !important;
   height: auto !important;
+}
+
+/* Input Placeholder */
+.login-pf input::placeholder {
+  color: var(--text-muted) !important;
 }
 
 /* Input Hover */
@@ -241,7 +293,7 @@ input.pf-c-form-control,
 .login-pf input[type="password"]:hover,
 .login-pf input[type="email"]:hover,
 input.pf-c-form-control:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
   border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
@@ -251,26 +303,14 @@ input.pf-c-form-control:hover {
 .login-pf input[type="email"]:focus,
 input.pf-c-form-control:focus {
   border-color: rgba(99, 102, 241, 0.5) !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
-  transform: translateY(-2px);
-}
-
-/* Input placeholder */
-.login-pf input::placeholder {
-  color: var(--text-tertiary) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
 }
 
 /* Form groups */
 .form-group,
 .pf-c-form__group {
-  margin-bottom: 20px !important;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.form-group:hover,
-.pf-c-form__group:hover {
-  transform: translateY(-2px);
+  margin-bottom: 16px !important;
 }
 
 /* ===========================================
@@ -298,19 +338,10 @@ button.pf-c-button.pf-m-primary {
   letter-spacing: 0 !important;
   position: relative !important;
   overflow: hidden !important;
+  margin-top: 8px !important;
 }
 
-/* Button Hover Overlay */
-#kc-form-buttons input[type="submit"]::before,
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
+/* Button Hover */
 #kc-form-buttons input[type="submit"]:hover:not(:disabled),
 .btn-primary:hover:not(:disabled),
 input.pf-c-button.pf-m-primary:hover:not(:disabled) {
@@ -318,27 +349,32 @@ input.pf-c-button.pf-m-primary:hover:not(:disabled) {
   box-shadow: 0 20px 40px rgba(99, 102, 241, 0.4) !important;
 }
 
-#kc-form-buttons input[type="submit"]:hover::before,
-.btn-primary:hover::before {
-  opacity: 1;
-}
-
 #kc-form-buttons input[type="submit"]:active:not(:disabled),
 .btn-primary:active:not(:disabled) {
   transform: translateY(0) !important;
+}
+
+#kc-form-buttons input[type="submit"]:disabled,
+.btn-primary:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
 }
 
 /* Secondary/Cancel Button */
 .btn-default,
 input.pf-c-button.pf-m-secondary,
 button.pf-c-button.pf-m-secondary {
+  width: 100% !important;
+  padding: 14px !important;
   background: rgba(255, 255, 255, 0.05) !important;
-  color: var(--text-secondary) !important;
-  border: 1px solid var(--glass-border) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 12px !important;
-  padding: 14px 24px !important;
+  font-size: 14px !important;
   font-weight: 600 !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: pointer !important;
 }
 
 .btn-default:hover,
@@ -347,7 +383,6 @@ button.pf-c-button.pf-m-secondary:hover {
   background: rgba(255, 255, 255, 0.08) !important;
   border-color: rgba(255, 255, 255, 0.2) !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* ===========================================
@@ -367,26 +402,53 @@ a:hover,
   text-shadow: 0 0 20px rgba(139, 92, 246, 0.5) !important;
 }
 
-/* Registration link */
+/* Registration link area */
 #kc-registration {
   text-align: center !important;
-  margin-top: 24px !important;
+  margin-top: 20px !important;
   padding-top: 20px !important;
-  border-top: 1px solid var(--glass-border) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  position: relative !important;
+}
+
+#kc-registration::before {
+  content: '계정이 없으신가요?';
+  display: block;
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 16px;
 }
 
 #kc-registration span {
-  color: var(--text-secondary) !important;
+  display: none !important;
+}
+
+#kc-registration a {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  padding: 14px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-weight: 600 !important;
   font-size: 14px !important;
+  transition: all 0.3s ease !important;
+}
+
+#kc-registration a:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  transform: translateY(-2px) !important;
+  text-shadow: none !important;
 }
 
 /* Forgot password link */
 #kc-form-options {
   margin-top: 16px !important;
-}
-
-#kc-form-options .checkbox {
-  margin-bottom: 12px !important;
+  text-align: center !important;
 }
 
 /* ===========================================
@@ -394,17 +456,18 @@ a:hover,
    =========================================== */
 .alert {
   border-radius: 12px !important;
-  padding: 16px 20px !important;
+  padding: 12px 16px !important;
   margin-bottom: 20px !important;
   border: 1px solid !important;
   backdrop-filter: blur(10px) !important;
+  font-size: 14px !important;
 }
 
 .alert-error,
 .alert-danger,
 .pf-c-alert.pf-m-danger {
   background: rgba(239, 68, 68, 0.1) !important;
-  color: #fca5a5 !important;
+  color: #f87171 !important;
   border-color: rgba(239, 68, 68, 0.3) !important;
 }
 
@@ -437,6 +500,9 @@ a:hover,
   font-size: 14px !important;
   color: var(--text-secondary) !important;
   cursor: pointer;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
 }
 
 input[type="checkbox"] {
@@ -444,22 +510,21 @@ input[type="checkbox"] {
   height: 18px !important;
   cursor: pointer !important;
   accent-color: var(--accent-purple) !important;
-  margin-right: 8px !important;
   border-radius: 4px !important;
 }
 
 /* ===========================================
-   Social Login Buttons (Identity Providers)
+   Social Login Buttons
    =========================================== */
 #kc-social-providers {
   margin-top: 24px !important;
   padding-top: 20px !important;
-  border-top: 1px solid var(--glass-border) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 #kc-social-providers h4,
 #kc-social-providers .kc-social-section {
-  color: var(--text-tertiary) !important;
+  color: var(--text-muted) !important;
   font-size: 13px !important;
   text-align: center !important;
   margin-bottom: 16px !important;
@@ -470,14 +535,12 @@ input[type="checkbox"] {
   padding: 0 !important;
   margin: 0 !important;
   display: flex !important;
+  flex-direction: column !important;
   gap: 12px !important;
-  justify-content: center !important;
 }
 
 #kc-social-providers li {
   margin: 0 !important;
-  flex: 1 !important;
-  max-width: 80px !important;
 }
 
 .zocial,
@@ -485,7 +548,7 @@ input[type="checkbox"] {
   width: 100% !important;
   padding: 14px !important;
   background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid var(--glass-border) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 12px !important;
   color: var(--text-primary) !important;
   font-weight: 600 !important;
@@ -502,7 +565,7 @@ input[type="checkbox"] {
 #kc-social-providers a:hover {
   background: rgba(255, 255, 255, 0.08) !important;
   border-color: rgba(255, 255, 255, 0.2) !important;
-  transform: translateY(-3px) !important;
+  transform: translateY(-2px) !important;
   text-shadow: none !important;
 }
 
@@ -516,7 +579,7 @@ input[type="checkbox"] {
 
 #kc-info .kc-info-message {
   font-size: 12px !important;
-  color: var(--text-tertiary) !important;
+  color: var(--text-muted) !important;
 }
 
 /* ===========================================
@@ -525,20 +588,15 @@ input[type="checkbox"] {
 @media (max-width: 640px) {
   #kc-form-wrapper,
   .card-pf,
-  #kc-login,
-  #kc-register,
+  #kc-form,
   #kc-content-wrapper {
     padding: 32px 24px !important;
-    margin: 20px 16px !important;
+    margin: 16px !important;
     border-radius: 20px !important;
   }
 
   #kc-page-title {
     font-size: 24px !important;
-  }
-
-  .login-pf .container-fluid {
-    padding-top: 20px;
   }
 
   body::before {
@@ -550,38 +608,11 @@ input[type="checkbox"] {
     width: 250px;
     height: 250px;
   }
-}
 
-/* ===========================================
-   Registration Form Specific
-   =========================================== */
-#kc-register-form .form-group {
-  margin-bottom: 16px !important;
-}
-
-/* Two column layout for name fields */
-@media (min-width: 480px) {
-  .pf-c-form__group-control {
-    display: block !important;
+  .login-pf::before {
+    width: 180px;
+    height: 180px;
   }
-}
-
-/* ===========================================
-   Loading State
-   =========================================== */
-.btn-primary[disabled],
-input[type="submit"][disabled] {
-  opacity: 0.6 !important;
-  cursor: not-allowed !important;
-  transform: none !important;
-}
-
-/* Loading shimmer effect */
-.btn-primary.loading,
-input[type="submit"].loading {
-  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #6366f1 100%) !important;
-  background-size: 200% auto !important;
-  animation: shimmer 1.5s linear infinite !important;
 }
 
 /* ===========================================
@@ -590,8 +621,12 @@ input[type="submit"].loading {
 .pf-c-button.pf-m-control {
   background: transparent !important;
   border: none !important;
-  color: var(--text-tertiary) !important;
+  color: var(--text-muted) !important;
   transition: color 0.2s ease !important;
+  position: absolute !important;
+  right: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
 }
 
 .pf-c-button.pf-m-control:hover {
@@ -603,49 +638,25 @@ input[type="submit"].loading {
    =========================================== */
 select,
 .pf-c-select__toggle {
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid var(--glass-border) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 12px !important;
   color: var(--text-primary) !important;
-  padding: 12px 16px !important;
+  padding: 14px 16px !important;
   transition: all 0.3s ease !important;
+  width: 100% !important;
 }
 
 select:hover,
 .pf-c-select__toggle:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
   border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 select:focus,
 .pf-c-select__toggle:focus {
   border-color: rgba(99, 102, 241, 0.5) !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
-}
-
-/* ===========================================
-   Terms and Conditions
-   =========================================== */
-#kc-terms-text {
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid var(--glass-border) !important;
-  border-radius: 12px !important;
-  padding: 16px !important;
-  color: var(--text-secondary) !important;
-  font-size: 13px !important;
-  max-height: 200px !important;
-  overflow-y: auto !important;
-}
-
-/* ===========================================
-   OTP / 2FA Input
-   =========================================== */
-.otp-input,
-input[name="otp"] {
-  letter-spacing: 8px !important;
-  font-size: 24px !important;
-  text-align: center !important;
-  font-family: 'Space Grotesk', monospace !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
 }
 
 /* ===========================================
@@ -683,4 +694,36 @@ input[name="otp"] {
 *:focus-visible {
   outline: 2px solid var(--accent-purple);
   outline-offset: 2px;
+}
+
+/* ===========================================
+   Additional Polish
+   =========================================== */
+
+/* Hide unwanted elements */
+.pf-c-login__main-footer,
+.login-pf-page .login-pf-header,
+#kc-locale {
+  display: none !important;
+}
+
+/* Ensure form is centered */
+.login-pf-page .row {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  min-height: 100vh !important;
+}
+
+/* Reset column widths */
+.col-sm-12,
+.col-md-4,
+.col-md-offset-4,
+.col-lg-4,
+.col-lg-offset-4 {
+  width: 100% !important;
+  max-width: 420px !important;
+  margin: 0 auto !important;
+  padding: 20px !important;
+  float: none !important;
 }
