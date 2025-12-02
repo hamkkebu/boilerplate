@@ -82,8 +82,8 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": true,
       "protocol": "openid-connect",
-      "rootUrl": "http://localhost:3000",
-      "baseUrl": "/",
+      "rootUrl": "http://localhost:3001",
+      "baseUrl": "/login",
       "redirectUris": [
         "http://localhost:3000/*",
         "http://localhost:3001/*",

@@ -182,6 +182,8 @@ services:
       KC_HOSTNAME_STRICT: false
       KC_HOSTNAME_STRICT_HTTPS: false
       KC_HTTP_ENABLED: true
+      # Cookie SameSite 설정 (크로스 도메인 로그인 허용)
+      KC_SPI_STICKY_SESSION_ENCODER_INFINISPAN_SHOULD_ATTACH_ROUTE: false
     volumes:
       - ./infrastructure/keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
       - ./infrastructure/keycloak/themes/hamkkebu:/opt/keycloak/themes/hamkkebu:ro
