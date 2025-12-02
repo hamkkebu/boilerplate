@@ -43,7 +43,7 @@ import java.util.concurrent.CompletableFuture;
 public class OutboxEventScheduler {
 
     private final OutboxEventRepository outboxEventRepository;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, String> outboxKafkaTemplate;
 
     /**
      * Outbox 이벤트를 Kafka로 발행
@@ -113,14 +113,15 @@ public class OutboxEventScheduler {
             outboxEvent.getEventId(), outboxEvent.getTopic(), outboxEvent.getResourceId());
 
         // Kafka로 발행 (동기 방식으로 성공 여부 확인)
-        CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(
+        // StringSerializer를 사용하여 JSON 문자열을 그대로 전송
+        CompletableFuture<SendResult<String, String>> future = outboxKafkaTemplate.send(
             outboxEvent.getTopic(),
             outboxEvent.getResourceId(),
-            outboxEvent.getPayload() // JSON 문자열을 그대로 전송
+            outboxEvent.getPayload()
         );
 
         // 발행 결과 대기
-        SendResult<String, Object> result = future.get();
+        SendResult<String, String> result = future.get();
 
         // 발행 성공 처리
         outboxEvent.markAsPublished();

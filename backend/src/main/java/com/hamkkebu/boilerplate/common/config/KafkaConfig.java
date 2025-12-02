@@ -73,6 +73,26 @@ public class KafkaConfig {
     }
 
     /**
+     * Outbox 이벤트용 Producer 설정
+     * payload가 이미 JSON 문자열이므로 StringSerializer 사용
+     */
+    @Bean
+    public ProducerFactory<String, String> outboxProducerFactory() {
+        Map<String, Object> config = new HashMap<>();
+        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        config.put(ProducerConfig.ACKS_CONFIG, "all");
+        config.put(ProducerConfig.RETRIES_CONFIG, 3);
+        return new DefaultKafkaProducerFactory<>(config);
+    }
+
+    @Bean
+    public KafkaTemplate<String, String> outboxKafkaTemplate() {
+        return new KafkaTemplate<>(outboxProducerFactory());
+    }
+
+    /**
      * Kafka Consumer 설정
      */
     @Bean
