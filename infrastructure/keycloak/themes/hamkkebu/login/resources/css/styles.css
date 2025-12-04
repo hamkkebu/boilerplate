@@ -623,6 +623,32 @@ div:has(> input[type="password"]) {
   padding-right: 48px !important;
 }
 
+/* Error Text */
+.error-text,
+span.error-text,
+.input-error {
+  display: block !important;
+  color: #f87171 !important;
+  font-size: 13px !important;
+  margin-top: 6px !important;
+  padding-left: 2px !important;
+}
+
+/* Register Form Specific */
+#kc-register-form {
+  width: 100% !important;
+}
+
+#kc-register-form .form-group {
+  margin-bottom: 16px !important;
+}
+
+/* Back to Login link styling */
+#kc-registration span {
+  color: var(--text-muted) !important;
+  font-size: 14px !important;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .login-pf-page .card-pf {
