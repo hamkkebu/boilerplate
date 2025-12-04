@@ -79,7 +79,6 @@ export function useKeycloak() {
         silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
         pkceMethod: 'S256',
         checkLoginIframe: false, // 서드파티 쿠키 차단 브라우저 호환성
-        enableLogging: true,
       });
 
       isInitialized.value = true;
