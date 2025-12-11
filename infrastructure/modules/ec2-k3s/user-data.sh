@@ -106,16 +106,43 @@ chmod +x /usr/local/bin/argocd
 
 # ArgoCD 초기 비밀번호 가져오기 및 변경
 echo ">>> Configuring ArgoCD admin password..."
-sleep 30  # ArgoCD secret 생성 대기
 
 # HOME 환경변수 설정 (ArgoCD CLI 필요)
 export HOME=/root
 
-ARGOCD_INITIAL_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
+# ArgoCD secret이 생성될 때까지 대기
+echo ">>> Waiting for ArgoCD initial admin secret..."
+until kubectl -n argocd get secret argocd-initial-admin-secret 2>/dev/null; do
+    echo "Waiting for argocd-initial-admin-secret..."
+    sleep 5
+done
 
-# ArgoCD 로그인 및 비밀번호 변경
-argocd login localhost:30080 --insecure --username admin --password "$ARGOCD_INITIAL_PASSWORD" || true
-argocd account update-password --current-password "$ARGOCD_INITIAL_PASSWORD" --new-password "$ARGOCD_PASSWORD" || true
+# ArgoCD server가 완전히 준비될 때까지 추가 대기
+sleep 10
+
+ARGOCD_INITIAL_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
+echo ">>> Initial password retrieved successfully"
+
+# ArgoCD 로그인 및 비밀번호 변경 (재시도 로직)
+MAX_RETRIES=5
+RETRY_COUNT=0
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+    echo ">>> Attempting ArgoCD login (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)..."
+    if argocd login localhost:30080 --insecure --username admin --password "$ARGOCD_INITIAL_PASSWORD"; then
+        echo ">>> Login successful, changing password..."
+        if argocd account update-password --current-password "$ARGOCD_INITIAL_PASSWORD" --new-password "$ARGOCD_PASSWORD"; then
+            echo ">>> Password changed successfully!"
+            break
+        fi
+    fi
+    RETRY_COUNT=$((RETRY_COUNT + 1))
+    sleep 10
+done
+
+if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+    echo ">>> WARNING: Failed to change ArgoCD password after $MAX_RETRIES attempts"
+    echo ">>> You may need to manually change the password using the initial password"
+fi
 
 # hamkkebu 네임스페이스 생성
 echo ">>> Creating hamkkebu namespace..."
@@ -182,6 +209,14 @@ helm upgrade --install external-secrets external-secrets/external-secrets \
 
 echo ">>> Waiting for External Secrets Operator to be ready..."
 kubectl wait --for=condition=available --timeout=300s deployment/external-secrets -n external-secrets
+
+# CRD가 등록될 때까지 대기
+echo ">>> Waiting for External Secrets CRDs to be registered..."
+until kubectl get crd secretstores.external-secrets.io 2>/dev/null; do
+    echo "Waiting for SecretStore CRD..."
+    sleep 5
+done
+echo ">>> SecretStore CRD is ready!"
 
 # SecretStore 생성 (Kubernetes backend - Dev용)
 echo ">>> Creating SecretStore for Kubernetes backend..."
