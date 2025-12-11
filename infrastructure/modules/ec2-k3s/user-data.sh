@@ -20,7 +20,12 @@ DB_PORT="${db_port}"
 # 시스템 업데이트 (Amazon Linux 2023은 dnf 사용)
 echo ">>> Updating system packages..."
 dnf update -y
-dnf install -y docker git jq curl
+
+# curl-minimal과 curl 충돌 해결
+echo ">>> Resolving curl package conflict..."
+dnf swap curl-minimal curl --allowerasing -y
+
+dnf install -y docker git jq
 
 # Docker 시작
 echo ">>> Starting Docker..."
@@ -89,9 +94,14 @@ kubectl patch svc argocd-server -n argocd -p '{
   }
 }'
 
-# ArgoCD CLI 설치
+# ArgoCD CLI 설치 (ARM64/aarch64 지원)
 echo ">>> Installing ArgoCD CLI..."
-curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+ARCH=$(uname -m)
+if [ "$ARCH" = "aarch64" ]; then
+  curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-arm64
+else
+  curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+fi
 chmod +x /usr/local/bin/argocd
 
 # ArgoCD 초기 비밀번호 가져오기 및 변경
@@ -147,14 +157,14 @@ kubectl create configmap hamkkebu-common-config \
   --from-literal=DB_PORT="$DB_PORT" \
   -n hamkkebu || true
 
+# Helm 설치 (K3s에 기본 포함 안됨)
+echo ">>> Installing Helm..."
+curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
 # External Secrets Operator (ESO) 설치
 echo ">>> Installing External Secrets Operator..."
 helm repo add external-secrets https://charts.external-secrets.io || true
 helm repo update
-
-# Helm 설치 (K3s에 기본 포함 안됨)
-echo ">>> Installing Helm..."
-curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
 # ESO 설치
 helm upgrade --install external-secrets external-secrets/external-secrets \
