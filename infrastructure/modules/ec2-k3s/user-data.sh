@@ -108,6 +108,9 @@ chmod +x /usr/local/bin/argocd
 echo ">>> Configuring ArgoCD admin password..."
 sleep 30  # ArgoCD secret 생성 대기
 
+# HOME 환경변수 설정 (ArgoCD CLI 필요)
+export HOME=/root
+
 ARGOCD_INITIAL_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
 
 # ArgoCD 로그인 및 비밀번호 변경
@@ -147,6 +150,10 @@ SCRIPT
 chmod +x /usr/local/bin/ecr-cred-refresh.sh
 
 # Cron job 설정 (6시간마다 실행)
+# Amazon Linux 2023은 cronie 설치 필요
+dnf install -y cronie
+systemctl enable crond
+systemctl start crond
 echo "0 */6 * * * root /usr/local/bin/ecr-cred-refresh.sh >> /var/log/ecr-cred-refresh.log 2>&1" > /etc/cron.d/ecr-cred-refresh
 chmod 644 /etc/cron.d/ecr-cred-refresh
 
