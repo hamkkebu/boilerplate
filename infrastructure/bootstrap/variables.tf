@@ -21,3 +21,9 @@ variable "lock_table_name" {
   type        = string
   default     = "terraform-state-lock"
 }
+
+variable "key_pair_name" {
+  description = "EC2 Key Pair name"
+  type        = string
+  default     = "hamkkebu-dev-key"
+}

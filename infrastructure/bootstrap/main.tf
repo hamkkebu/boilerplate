@@ -92,3 +92,27 @@ resource "aws_dynamodb_table" "terraform_lock" {
     Name = "Terraform State Lock Table"
   }
 }
+
+# ============================================
+# EC2 Key Pair
+# ============================================
+resource "tls_private_key" "ec2" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "aws_key_pair" "ec2" {
+  key_name   = var.key_pair_name
+  public_key = tls_private_key.ec2.public_key_openssh
+
+  tags = {
+    Name = var.key_pair_name
+  }
+}
+
+# 프라이빗 키를 로컬 파일로 저장
+resource "local_file" "private_key" {
+  content         = tls_private_key.ec2.private_key_pem
+  filename        = "${path.module}/${var.key_pair_name}.pem"
+  file_permission = "0400"
+}
