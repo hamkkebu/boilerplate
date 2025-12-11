@@ -17,10 +17,10 @@ PROJECT_NAME="${project_name}"
 DB_HOST="${db_host}"
 DB_PORT="${db_port}"
 
-# 시스템 업데이트
+# 시스템 업데이트 (Amazon Linux 2023은 dnf 사용)
 echo ">>> Updating system packages..."
-yum update -y
-yum install -y docker git jq curl
+dnf update -y
+dnf install -y docker git jq curl
 
 # Docker 시작
 echo ">>> Starting Docker..."

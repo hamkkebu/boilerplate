@@ -1,14 +1,35 @@
 # EC2 + K3s + ArgoCD Module
-# 프리티어: t2.micro (750시간/월)
+# Free Plan (2025.07+): t4g.small (ARM/Graviton)
 
-# Latest Amazon Linux 2 AMI
-data "aws_ami" "amazon_linux_2" {
+locals {
+  # t4g = arm64, t2/t3 = x86_64
+  is_arm = length(regexall("^t4g", var.instance_type)) > 0
+}
+
+# Amazon Linux 2023 AMI (x86_64)
+data "aws_ami" "amazon_linux_x86" {
   most_recent = true
   owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-*-x86_64"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+# Amazon Linux 2023 AMI (arm64/Graviton)
+data "aws_ami" "amazon_linux_arm" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-*-arm64"]
   }
 
   filter {
@@ -140,7 +161,7 @@ resource "aws_iam_instance_profile" "k3s" {
 
 # EC2 Instance
 resource "aws_instance" "k3s_master" {
-  ami                    = data.aws_ami.amazon_linux_2.id
+  ami                    = local.is_arm ? data.aws_ami.amazon_linux_arm.id : data.aws_ami.amazon_linux_x86.id
   instance_type          = var.instance_type
   key_name               = var.key_pair_name
   vpc_security_group_ids = [aws_security_group.k3s.id]
