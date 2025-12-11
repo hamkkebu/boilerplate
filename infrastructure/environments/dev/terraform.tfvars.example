@@ -22,8 +22,9 @@ vpc_cidr = "10.0.0.0/16"
 # EC2 Key Pair 이름 (AWS Console에서 미리 생성 필요)
 key_pair_name = "hamkkebu-dev-key"
 
-# 프리티어: t2.micro
-k3s_instance_type = "t2.micro"
+# 프리티어: t3.micro (ap-northeast-2 리전)
+# 참고: t2.micro는 일부 리전에서만 프리티어
+k3s_instance_type = "t3.micro"
 
 # SSH 접근 허용 IP (보안을 위해 본인 IP로 제한 권장)
 # 예: ["1.2.3.4/32"]
@@ -37,8 +38,9 @@ argocd_admin_password = "YourSecurePassword123!"
 # ============================================
 create_rds = true
 
-# 프리티어: db.t2.micro
-db_instance_class = "db.t2.micro"
+# 프리티어: db.t3.micro (ap-northeast-2 리전)
+# 참고: db.t2.micro는 일부 리전에서만 프리티어
+db_instance_class = "db.t3.micro"
 
 # 프리티어: 최대 20GB
 db_allocated_storage = 20
