@@ -75,6 +75,21 @@ Thumbs.db
 .DS_Store
 
 # ========================================
+# Terraform
+# ========================================
+*.tfvars
+!*.tfvars.example
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# ========================================
 # Documentation (auto-generated)
 # ========================================
 # Keep only manually written docs, ignore auto-generated reports
