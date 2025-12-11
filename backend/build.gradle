@@ -57,9 +57,6 @@ dependencies {
 	// Kafka
 	api 'org.springframework.kafka:spring-kafka'
 
-	// Redis (Rate Limiting 포함)
-	api 'org.springframework.boot:spring-boot-starter-data-redis'
-
 	// .env 파일 로드 (로컬 개발용)
 	api 'me.paulschwarz:spring-dotenv:4.0.0'
 

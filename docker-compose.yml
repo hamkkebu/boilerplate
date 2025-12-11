@@ -23,48 +23,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis (Refresh Token 저장) - 공유 인프라
-  redis:
-    image: redis:7-alpine
-    container_name: hamkkebu-boilerplate-redis
-    # SECURITY: 포트를 127.0.0.1로 바인딩 (외부 접근 차단)
-    ports:
-      - "127.0.0.1:6379:6379"
-    # SECURITY: 비밀번호 설정 및 RDB 저장 에러 시 쓰기 허용
-    command: redis-server --requirepass ${REDIS_PASSWORD:-devRedisPassword123!} --stop-writes-on-bgsave-error no
-    environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-devRedisPassword123!}
-    volumes:
-      - redis-data:/data
-    networks:
-      - boilerplate-internal
-      - hamkkebu-infra
-    # Redis는 기본 사용자(redis)로 실행 - 볼륨 쓰기 권한 보장
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-devRedisPassword123!}", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # RedisInsight (Redis 관리 도구)
-  # SECURITY: 프로덕션 환경에서는 제거 권장
-  redisinsight:
-    image: redis/redisinsight:latest
-    container_name: hamkkebu-boilerplate-redisinsight
-    # SECURITY: 포트를 127.0.0.1로 바인딩 (외부 접근 차단)
-    ports:
-      - "127.0.0.1:8001:5540"
-    volumes:
-      - redisinsight-data:/data
-    depends_on:
-      - redis
-    networks:
-      - boilerplate-internal
-    # 프로덕션 배포 시 이 서비스 제거:
-    # docker-compose up -d database redis kafka backend frontend
-    profiles:
-      - dev  # 개발 환경에서만 실행
-
   # Zookeeper (Kafka 의존성) - 공유 인프라
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -218,9 +176,6 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_KAFKA_CONSUMER_GROUP_ID: boilerplate-service-group
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
-      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-devRedisPassword123!}
       # JWT Secret (최소 32 bytes 권장)
       JWT_SECRET: ${JWT_SECRET:-ThisIsADevelopmentSecretKeyPleaseChangeInProduction32Bytes}
       # gRPC 클라이언트 설정 (auth-service 연결)
@@ -228,8 +183,6 @@ services:
     restart: "no"
     depends_on:
       database:
-        condition: service_healthy
-      redis:
         condition: service_healthy
       kafka:
         condition: service_healthy
@@ -264,6 +217,4 @@ networks:
 
 volumes:
   mysql-data:
-  redis-data:
-  redisinsight-data:
   keycloak-db-data:

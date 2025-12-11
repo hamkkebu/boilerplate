@@ -55,19 +55,6 @@ spring:
         # SECURITY: "*" 사용 시 Insecure Deserialization 취약점 발생
         spring.json.trusted.packages: "com.hamkkebu.boilerplate.*"
 
-  # Redis 설정
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}  # 비밀번호가 없으면 비워둠
-      timeout: ${REDIS_TIMEOUT:2000ms}
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
-
 # Keycloak SSO 설정
 keycloak:
   auth-server-url: ${KEYCLOAK_AUTH_SERVER_URL:http://localhost:8180}
@@ -79,26 +66,6 @@ keycloak:
 spring.security.oauth2.resourceserver.jwt:
   issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/hamkkebu}
   jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/hamkkebu/protocol/openid-connect/certs}
-
-# Security 설정
-security:
-  rate-limiting:
-    # SECURITY: 프록시 사용 여부
-    # false: getRemoteAddr() 직접 사용 (기본값, 안전)
-    # true: X-Forwarded-For 헤더 확인 (프록시 환경)
-    trust-proxy: false
-    # Rate limiting 설정
-    auth-requests-per-minute: 30
-    general-requests-per-minute: 200
-    window-size-seconds: 60
-
-  login-attempt:
-    # 최대 로그인 시도 횟수
-    max-attempts: ${LOGIN_MAX_ATTEMPTS:5}
-    # 계정 잠금 시간 (분)
-    block-duration-minutes: ${LOGIN_BLOCK_DURATION:15}
-    # 로그인 시도 카운터 초기화 시간 (분)
-    attempt-reset-minutes: ${LOGIN_ATTEMPT_RESET:15}
 
 # gRPC 설정 (내부 서비스 간 통신)
 grpc:
