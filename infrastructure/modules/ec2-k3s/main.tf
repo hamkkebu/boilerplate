@@ -178,7 +178,7 @@ resource "aws_instance" "k3s_master" {
   }))
 
   root_block_device {
-    volume_size           = 20  # 프리티어 최대
+    volume_size           = 30  # AMI 최소 요구사항 (프리티어 30GB 무료)
     volume_type           = "gp2"
     encrypted             = true
     delete_on_termination = true
