@@ -63,7 +63,7 @@
       "description": "Backend services (auth-service, ledger-service, etc.)",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "hamkkebu-backend-secret",
+      "secret": "CHANGE_ME_IN_PRODUCTION",
       "bearerOnly": true,
       "publicClient": false,
       "protocol": "openid-connect",

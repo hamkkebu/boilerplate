@@ -147,6 +147,49 @@ kubectl create configmap hamkkebu-common-config \
   --from-literal=DB_PORT="$DB_PORT" \
   -n hamkkebu || true
 
+# External Secrets Operator (ESO) 설치
+echo ">>> Installing External Secrets Operator..."
+helm repo add external-secrets https://charts.external-secrets.io || true
+helm repo update
+
+# Helm 설치 (K3s에 기본 포함 안됨)
+echo ">>> Installing Helm..."
+curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+# ESO 설치
+helm upgrade --install external-secrets external-secrets/external-secrets \
+  --namespace external-secrets \
+  --create-namespace \
+  --set installCRDs=true \
+  --wait
+
+echo ">>> Waiting for External Secrets Operator to be ready..."
+kubectl wait --for=condition=available --timeout=300s deployment/external-secrets -n external-secrets
+
+# SecretStore 생성 (Kubernetes backend - Dev용)
+echo ">>> Creating SecretStore for Kubernetes backend..."
+kubectl apply -f - <<EOF
+apiVersion: external-secrets.io/v1beta1
+kind: SecretStore
+metadata:
+  name: hamkkebu-secret-store
+  namespace: hamkkebu
+spec:
+  provider:
+    kubernetes:
+      remoteNamespace: hamkkebu
+      server:
+        caProvider:
+          type: ConfigMap
+          name: kube-root-ca.crt
+          key: ca.crt
+      auth:
+        serviceAccount:
+          name: default
+EOF
+
+echo ">>> External Secrets Operator installed successfully!"
+
 echo "============================================"
 echo "K3s + ArgoCD Installation Complete!"
 echo "============================================"
