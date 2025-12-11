@@ -1,0 +1,57 @@
+# ============================================
+# Hamkkebu Dev Environment - Terraform Variables
+# ============================================
+# 사용법:
+# 1. 이 파일을 terraform.tfvars로 복사
+# 2. 실제 값으로 변경
+# 3. terraform.tfvars는 .gitignore에 추가되어 있음
+# ============================================
+
+project_name = "hamkkebu"
+environment  = "dev"
+aws_region   = "ap-northeast-2"
+
+# ============================================
+# VPC
+# ============================================
+vpc_cidr = "10.0.0.0/16"
+
+# ============================================
+# EC2 / K3s (프리티어)
+# ============================================
+# EC2 Key Pair 이름 (AWS Console에서 미리 생성 필요)
+key_pair_name = "hamkkebu-dev-key"
+
+# 프리티어: t2.micro
+k3s_instance_type = "t2.micro"
+
+# SSH 접근 허용 IP (보안을 위해 본인 IP로 제한 권장)
+# 예: ["1.2.3.4/32"]
+allowed_ssh_cidrs = ["0.0.0.0/0"]
+
+# ArgoCD 관리자 비밀번호 (최소 8자)
+argocd_admin_password = "YourSecurePassword123!"
+
+# ============================================
+# RDS (프리티어)
+# ============================================
+create_rds = true
+
+# 프리티어: db.t2.micro
+db_instance_class = "db.t2.micro"
+
+# 프리티어: 최대 20GB
+db_allocated_storage = 20
+
+db_name     = "hamkkebu"
+db_username = "admin"
+db_password = "YourDatabasePassword123!"
+
+# 기존 RDS 사용 시 (create_rds = false)
+# db_host = "your-rds-endpoint.ap-northeast-2.rds.amazonaws.com"
+# db_port = "3306"
+
+# ============================================
+# GitHub Actions
+# ============================================
+create_github_actions_user = true
