@@ -49,6 +49,21 @@ cp /etc/rancher/k3s/k3s.yaml /home/ec2-user/.kube/config
 chown -R ec2-user:ec2-user /home/ec2-user/.kube
 chmod 600 /home/ec2-user/.kube/config
 
+# 외부 접근용 kubeconfig 생성 (Public IP 사용)
+echo ">>> Creating external kubeconfig..."
+PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+sed "s/127.0.0.1/$PUBLIC_IP/g" /etc/rancher/k3s/k3s.yaml > /home/ec2-user/.kube/config-external
+chown ec2-user:ec2-user /home/ec2-user/.kube/config-external
+chmod 600 /home/ec2-user/.kube/config-external
+
+# GitHub Actions용 base64 인코딩된 kubeconfig 생성
+cat /home/ec2-user/.kube/config-external | base64 -w 0 > /home/ec2-user/.kube/kubeconfig-base64
+chown ec2-user:ec2-user /home/ec2-user/.kube/kubeconfig-base64
+echo ""
+echo ">>> GitHub Actions KUBECONFIG secret:"
+echo ">>> Run: cat ~/.kube/kubeconfig-base64"
+echo ""
+
 # 환경 변수 설정
 echo 'export KUBECONFIG=/etc/rancher/k3s/k3s.yaml' >> /home/ec2-user/.bashrc
 echo 'alias k=kubectl' >> /home/ec2-user/.bashrc
