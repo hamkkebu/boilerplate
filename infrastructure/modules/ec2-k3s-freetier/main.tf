@@ -130,75 +130,12 @@ resource "aws_iam_instance_profile" "k3s" {
   role        = aws_iam_role.k3s.name
 }
 
-# K3s 설치 스크립트
+# K3s 설치 스크립트 (외부 파일 참조)
 locals {
-  k3s_install_script = <<-EOF
-    #!/bin/bash
-    set -e
-
-    # 시스템 업데이트
-    dnf update -y
-
-    # Docker 설치 (ECR에서 이미지 pull용)
-    dnf install -y docker
-    systemctl enable docker
-    systemctl start docker
-
-    # K3s 설치 (Docker 대신 containerd 사용)
-    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik --write-kubeconfig-mode 644" sh -
-
-    # kubectl alias
-    echo 'alias k=kubectl' >> /home/ec2-user/.bashrc
-    echo 'export KUBECONFIG=/etc/rancher/k3s/k3s.yaml' >> /home/ec2-user/.bashrc
-
-    # ECR credential helper 설치
-    dnf install -y amazon-ecr-credential-helper
-
-    # containerd에 ECR 인증 설정
-    mkdir -p /etc/rancher/k3s
-    cat > /etc/rancher/k3s/registries.yaml <<'REGISTRIES'
-    mirrors:
-      "${var.ecr_registry_url}":
-        endpoint:
-          - "https://${var.ecr_registry_url}"
-    configs:
-      "${var.ecr_registry_url}":
-        auth:
-          username: AWS
-          password: ""
-    REGISTRIES
-
-    # AWS CLI 설치
-    dnf install -y aws-cli
-
-    # ECR 로그인 스크립트 생성 (cronjob용)
-    cat > /usr/local/bin/ecr-login.sh <<'ECRLOGIN'
-    #!/bin/bash
-    PASSWORD=$(aws ecr get-login-password --region ${var.aws_region})
-    cat > /etc/rancher/k3s/registries.yaml <<REGISTRIES
-    mirrors:
-      "${var.ecr_registry_url}":
-        endpoint:
-          - "https://${var.ecr_registry_url}"
-    configs:
-      "${var.ecr_registry_url}":
-        auth:
-          username: AWS
-          password: "$PASSWORD"
-    REGISTRIES
-    systemctl restart k3s
-    ECRLOGIN
-    chmod +x /usr/local/bin/ecr-login.sh
-
-    # 매 6시간마다 ECR 토큰 갱신
-    echo "0 */6 * * * root /usr/local/bin/ecr-login.sh" > /etc/cron.d/ecr-login
-
-    # 초기 ECR 로그인
-    /usr/local/bin/ecr-login.sh
-
-    # 완료 표시
-    touch /var/log/k3s-setup-complete
-  EOF
+  k3s_install_script = templatefile("${path.module}/scripts/user-data.sh", {
+    ecr_registry_url = var.ecr_registry_url
+    aws_region       = var.aws_region
+  })
 }
 
 # EC2 Instance
