@@ -27,7 +27,10 @@ dnf update -y
 # 2. 필수 패키지 설치
 # ============================================
 echo "[2/7] Installing required packages..."
-dnf install -y docker aws-cli jq mysql
+dnf install -y docker aws-cli jq
+
+# MySQL 클라이언트 설치 (Amazon Linux 2023용)
+dnf install -y mariadb105 || echo "MariaDB client not available, skipping..."
 
 # Docker 서비스 시작
 systemctl enable docker

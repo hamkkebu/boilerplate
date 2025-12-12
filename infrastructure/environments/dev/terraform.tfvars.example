@@ -1,8 +1,8 @@
 # ============================================
 # Hamkkebu Dev Environment - Free Tier Configuration
 # ============================================
-# EC2 (t2.micro) + K3s + RDS (db.t2.micro) 단일 인스턴스
-# AWS Free Tier 12개월 무료 사용 가능
+# 신규 AWS 계정 (2024.11 이후): t4g.small + db.t4g.micro (Graviton/ARM64)
+# 기존 AWS 계정: t2.micro + db.t2.micro (x86_64)
 # ============================================
 # 사용법:
 # 1. 이 파일을 terraform.tfvars로 복사
@@ -22,23 +22,27 @@ vpc_cidr = "10.0.0.0/16"
 # ============================================
 # EC2 + K3s Settings (Free Tier)
 # ============================================
-ec2_instance_type    = "t2.micro"   # Free Tier (750시간/월)
-ec2_root_volume_size = 20           # GB (Free Tier: 30GB까지)
-ec2_key_pair_name    = null         # AWS Console에서 생성한 Key Pair 이름
+# 신규 계정: t4g.small (ARM64/Graviton, 750시간/월)
+# 기존 계정: t2.micro (x86_64, 750시간/월)
+ec2_instance_type    = "t4g.small"
+ec2_root_volume_size = 30           # GB (AMI 최소 요구사항)
+ec2_key_pair_name    = null         # Bootstrap에서 생성한 Key Pair 이름
 allowed_ssh_cidrs    = ["0.0.0.0/0"] # 보안을 위해 특정 IP로 제한 권장
 use_elastic_ip       = false        # true면 인스턴스 중지 시 비용 발생
 
 # ============================================
 # RDS Settings (Free Tier)
 # ============================================
-rds_instance_class          = "db.t2.micro"  # Free Tier (750시간/월)
+# 신규 계정: db.t4g.micro (ARM64/Graviton, 750시간/월)
+# 기존 계정: db.t2.micro (x86_64, 750시간/월)
+rds_instance_class          = "db.t4g.micro"
 rds_engine_version          = "8.0"
 rds_allocated_storage       = 20             # GB (Free Tier: 20GB)
 rds_max_allocated_storage   = 0              # 0 = autoscaling 비활성화
 rds_initial_db_name         = "hamkkebu"
 rds_master_username         = "admin"
 rds_master_password         = "YourSecurePassword123!"  # 반드시 변경!
-rds_backup_retention_period = 7              # days
+rds_backup_retention_period = 1              # days (Free Tier 제한)
 allowed_db_cidrs            = []             # 로컬 개발 시 IP 추가
 
 # ============================================
@@ -49,17 +53,17 @@ create_github_actions_user = true
 # ============================================
 # 예상 월 비용 (AWS Free Tier 12개월)
 # ============================================
-# - EC2 (t2.micro): $0 (750시간/월 무료)
-# - RDS (db.t2.micro): $0 (750시간/월 무료)
-# - EBS (20GB x 2): $0 (30GB까지 무료)
+# - EC2 (t4g.small): $0 (750시간/월 무료)
+# - RDS (db.t4g.micro): $0 (750시간/월 무료)
+# - EBS (30GB): $0 (30GB까지 무료)
 # - 데이터 전송: $0 (15GB/월 무료)
 # ============================================
 # 총 예상 비용: $0/월 (Free Tier 기간)
 #
 # * Free Tier 종료 후:
-# - EC2: ~$10/월
-# - RDS: ~$15/월
-# - Total: ~$25/월
+# - EC2 (t4g.small): ~$12/월
+# - RDS (db.t4g.micro): ~$12/월
+# - Total: ~$24/월
 # ============================================
 
 # ============================================

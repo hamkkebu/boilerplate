@@ -29,9 +29,9 @@ variable "vpc_cidr" {
 # EC2 + K3s (Free Tier)
 # ============================================
 variable "ec2_instance_type" {
-  description = "EC2 instance type (t2.micro for Free Tier)"
+  description = "EC2 instance type (t4g.small for new accounts, t2.micro for old accounts)"
   type        = string
-  default     = "t2.micro"
+  default     = "t4g.small"
 }
 
 variable "ec2_root_volume_size" {
@@ -62,9 +62,9 @@ variable "use_elastic_ip" {
 # RDS (Free Tier)
 # ============================================
 variable "rds_instance_class" {
-  description = "RDS instance class (db.t2.micro for Free Tier)"
+  description = "RDS instance class (db.t4g.micro for new accounts, db.t2.micro for old accounts)"
   type        = string
-  default     = "db.t2.micro"
+  default     = "db.t4g.micro"
 }
 
 variable "rds_engine_version" {

@@ -1,24 +1,37 @@
 # ============================================
 # EC2 + K3s Free Tier Module
 # ============================================
-# t2.micro/t3.micro 단일 인스턴스에 K3s 설치
-# Free Tier 적합 (12개월 750시간/월)
+# t4g.small (ARM64/Graviton) - 신규 계정 Free Tier
+# t2.micro (x86_64) - 기존 계정 Free Tier
 # ============================================
 
-# 최신 Amazon Linux 2023 AMI
+# Amazon Linux 2023 AMI (아키텍처 자동 선택)
 data "aws_ami" "amazon_linux_2023" {
   most_recent = true
   owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-kernel-*-x86_64"]
+    values = ["al2023-ami-*-kernel-*-${local.ami_architecture}"]
   }
 
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
   }
+}
+
+# 인스턴스 타입에 따른 아키텍처 자동 결정 + K3s 설치 스크립트
+locals {
+  # t4g, c6g, m6g 등 'g'로 끝나는 타입은 ARM64 (Graviton)
+  is_graviton      = can(regex("^[a-z]+[0-9]+g", var.instance_type))
+  ami_architecture = local.is_graviton ? "arm64" : "x86_64"
+
+  # K3s 설치 스크립트 (외부 파일 참조)
+  k3s_install_script = templatefile("${path.module}/scripts/user-data.sh", {
+    ecr_registry_url = var.ecr_registry_url
+    aws_region       = var.aws_region
+  })
 }
 
 # EC2 Security Group
@@ -130,13 +143,6 @@ resource "aws_iam_instance_profile" "k3s" {
   role        = aws_iam_role.k3s.name
 }
 
-# K3s 설치 스크립트 (외부 파일 참조)
-locals {
-  k3s_install_script = templatefile("${path.module}/scripts/user-data.sh", {
-    ecr_registry_url = var.ecr_registry_url
-    aws_region       = var.aws_region
-  })
-}
 
 # EC2 Instance
 resource "aws_instance" "k3s" {
