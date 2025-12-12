@@ -1,5 +1,5 @@
 # Hamkkebu Development Environment
-# AWS 프리티어 기반 K3s + ArgoCD 인프라
+# EKS + RDS (서비스별) + ALB 인프라
 
 terraform {
   required_version = ">= 1.5.0"
@@ -41,11 +41,8 @@ data "aws_availability_zones" "available" {
 }
 
 # ============================================
-# VPC (기존 또는 신규)
+# VPC
 # ============================================
-# 기존 VPC 사용 시 data source로 참조
-# 신규 생성 시 아래 리소스 활성화
-
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
@@ -64,6 +61,9 @@ resource "aws_internet_gateway" "main" {
   }
 }
 
+# ============================================
+# Public Subnets (ALB용)
+# ============================================
 resource "aws_subnet" "public" {
   count                   = 2
   vpc_id                  = aws_vpc.main.id
@@ -72,11 +72,16 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "${var.project_name}-${var.environment}-public-${count.index + 1}"
-    Type = "public"
+    Name                                           = "${var.project_name}-${var.environment}-public-${count.index + 1}"
+    Type                                           = "public"
+    "kubernetes.io/role/elb"                       = "1"
+    "kubernetes.io/cluster/${var.project_name}-${var.environment}" = "shared"
   }
 }
 
+# ============================================
+# Private Subnets (EKS Nodes, RDS용)
+# ============================================
 resource "aws_subnet" "private" {
   count             = 2
   vpc_id            = aws_vpc.main.id
@@ -84,11 +89,40 @@ resource "aws_subnet" "private" {
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = {
-    Name = "${var.project_name}-${var.environment}-private-${count.index + 1}"
-    Type = "private"
+    Name                                           = "${var.project_name}-${var.environment}-private-${count.index + 1}"
+    Type                                           = "private"
+    "kubernetes.io/role/internal-elb"              = "1"
+    "kubernetes.io/cluster/${var.project_name}-${var.environment}" = "shared"
   }
 }
 
+# ============================================
+# NAT Gateway (Private Subnet → Internet)
+# ============================================
+resource "aws_eip" "nat" {
+  domain = "vpc"
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-nat-eip"
+  }
+
+  depends_on = [aws_internet_gateway.main]
+}
+
+resource "aws_nat_gateway" "main" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-nat"
+  }
+
+  depends_on = [aws_internet_gateway.main]
+}
+
+# ============================================
+# Route Tables
+# ============================================
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
@@ -102,10 +136,29 @@ resource "aws_route_table" "public" {
   }
 }
 
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.main.id
+  }
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-private-rt"
+  }
+}
+
 resource "aws_route_table_association" "public" {
   count          = length(aws_subnet.public)
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
+}
+
+resource "aws_route_table_association" "private" {
+  count          = length(aws_subnet.private)
+  subnet_id      = aws_subnet.private[count.index].id
+  route_table_id = aws_route_table.private.id
 }
 
 # ============================================
@@ -120,99 +173,57 @@ module "ecr" {
 }
 
 # ============================================
-# EC2 + K3s Module
+# EKS Module
 # ============================================
-module "k3s" {
-  source = "../../modules/ec2-k3s"
+module "eks" {
+  source = "../../modules/eks"
 
-  project_name          = var.project_name
-  environment           = var.environment
-  aws_region            = var.aws_region
-  aws_account_id        = data.aws_caller_identity.current.account_id
-  vpc_id                = aws_vpc.main.id
-  public_subnet_id      = aws_subnet.public[0].id
-  key_pair_name         = var.key_pair_name
-  instance_type         = var.k3s_instance_type
-  allowed_ssh_cidrs     = var.allowed_ssh_cidrs
-  argocd_admin_password = var.argocd_admin_password
-  db_host               = var.db_host
-  db_port               = var.db_port
+  project_name        = var.project_name
+  environment         = var.environment
+  aws_region          = var.aws_region
+  vpc_id              = aws_vpc.main.id
+  private_subnet_ids  = aws_subnet.private[*].id
+  public_subnet_ids   = aws_subnet.public[*].id
+  cluster_version     = var.eks_cluster_version
+  node_instance_types = var.eks_node_instance_types
+  node_desired_size   = var.eks_node_desired_size
+  node_min_size       = var.eks_node_min_size
+  node_max_size       = var.eks_node_max_size
 }
 
 # ============================================
-# RDS Security Group (K3s에서 접근 허용)
+# RDS Module (서비스별 3개)
 # ============================================
-resource "aws_security_group" "rds" {
-  name        = "${var.project_name}-${var.environment}-rds-sg"
-  description = "Security group for RDS"
-  vpc_id      = aws_vpc.main.id
+module "rds" {
+  source = "../../modules/rds"
 
-  ingress {
-    description     = "MySQL from K3s"
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = [module.k3s.security_group_id]
-  }
+  project_name               = var.project_name
+  environment                = var.environment
+  vpc_id                     = aws_vpc.main.id
+  private_subnet_ids         = aws_subnet.private[*].id
+  allowed_security_group_ids = [module.eks.cluster_security_group_id]
+  instance_class             = var.db_instance_class
+  allocated_storage          = var.db_allocated_storage
+  backup_retention_period    = var.db_backup_retention_period
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${var.project_name}-${var.environment}-rds-sg"
-  }
-}
-
-# ============================================
-# RDS Subnet Group
-# ============================================
-resource "aws_db_subnet_group" "main" {
-  name       = "${var.project_name}-${var.environment}-db-subnet-group"
-  subnet_ids = aws_subnet.private[*].id
-
-  tags = {
-    Name = "${var.project_name}-${var.environment}-db-subnet-group"
-  }
-}
-
-# ============================================
-# RDS Instance (프리티어: db.t2.micro)
-# ============================================
-resource "aws_db_instance" "main" {
-  count = var.create_rds ? 1 : 0
-
-  identifier = "${var.project_name}-${var.environment}-mysql"
-
-  engine               = "mysql"
-  engine_version       = "8.0"
-  instance_class       = var.db_instance_class
-  allocated_storage    = var.db_allocated_storage
-  storage_type         = "gp2"
-  storage_encrypted    = true
-
-  db_name  = var.db_name
-  username = var.db_username
-  password = var.db_password
-
-  vpc_security_group_ids = [aws_security_group.rds.id]
-  db_subnet_group_name   = aws_db_subnet_group.main.name
-
-  backup_retention_period = 1  # 프리티어는 최대 1일
-  backup_window          = "03:00-04:00"
-  maintenance_window     = "Mon:04:00-Mon:05:00"
-
-  skip_final_snapshot       = var.environment != "prod"
-  final_snapshot_identifier = var.environment == "prod" ? "${var.project_name}-${var.environment}-final-snapshot" : null
-  deletion_protection       = var.environment == "prod"
-
-  publicly_accessible = false
-  multi_az            = false  # 프리티어는 단일 AZ
-
-  tags = {
-    Name = "${var.project_name}-${var.environment}-mysql"
-  }
+  services = [
+    {
+      name     = "auth"
+      db_name  = "hamkkebu_auth"
+      username = var.db_username
+      password = var.db_password_auth
+    },
+    {
+      name     = "ledger"
+      db_name  = "hamkkebu_ledger"
+      username = var.db_username
+      password = var.db_password_ledger
+    },
+    {
+      name     = "transaction"
+      db_name  = "hamkkebu_transaction"
+      username = var.db_username
+      password = var.db_password_transaction
+    }
+  ]
 }

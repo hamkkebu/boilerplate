@@ -17,34 +17,6 @@ output "github_actions_user" {
 }
 
 # ============================================
-# K3s / EC2 Outputs
-# ============================================
-output "k3s_public_ip" {
-  description = "K3s master public IP (Elastic IP)"
-  value       = module.k3s.instance_public_ip
-}
-
-output "k3s_private_ip" {
-  description = "K3s master private IP"
-  value       = module.k3s.instance_private_ip
-}
-
-output "argocd_url" {
-  description = "ArgoCD UI URL"
-  value       = module.k3s.argocd_url
-}
-
-output "ssh_command" {
-  description = "SSH command to connect to K3s master"
-  value       = module.k3s.ssh_command
-}
-
-output "kubeconfig_command" {
-  description = "Command to get kubeconfig"
-  value       = module.k3s.kubeconfig_command
-}
-
-# ============================================
 # VPC Outputs
 # ============================================
 output "vpc_id" {
@@ -62,20 +34,44 @@ output "private_subnet_ids" {
   value       = aws_subnet.private[*].id
 }
 
+output "nat_gateway_ip" {
+  description = "NAT Gateway public IP"
+  value       = aws_eip.nat.public_ip
+}
+
+# ============================================
+# EKS Outputs
+# ============================================
+output "eks_cluster_name" {
+  description = "EKS cluster name"
+  value       = module.eks.cluster_name
+}
+
+output "eks_cluster_endpoint" {
+  description = "EKS cluster endpoint"
+  value       = module.eks.cluster_endpoint
+}
+
+output "eks_kubeconfig_command" {
+  description = "Command to update kubeconfig"
+  value       = module.eks.kubeconfig_command
+}
+
+output "alb_controller_role_arn" {
+  description = "IAM role ARN for AWS Load Balancer Controller"
+  value       = module.eks.alb_controller_role_arn
+}
+
 # ============================================
 # RDS Outputs
 # ============================================
-output "rds_endpoint" {
-  description = "RDS endpoint"
-  value       = var.create_rds ? aws_db_instance.main[0].endpoint : null
+output "rds_endpoints" {
+  description = "RDS endpoints for each service"
+  value       = module.rds.endpoints
 }
 
-output "rds_address" {
-  description = "RDS address (hostname only)"
-  value       = var.create_rds ? aws_db_instance.main[0].address : null
-}
-
-output "rds_port" {
-  description = "RDS port"
-  value       = var.create_rds ? aws_db_instance.main[0].port : null
+output "rds_connection_strings" {
+  description = "JDBC connection strings for each service"
+  value       = module.rds.connection_strings
+  sensitive   = true
 }

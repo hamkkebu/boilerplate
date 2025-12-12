@@ -26,56 +26,57 @@ variable "vpc_cidr" {
 }
 
 # ============================================
-# EC2 / K3s
+# EKS
 # ============================================
-variable "key_pair_name" {
-  description = "Name of the EC2 key pair"
+variable "eks_cluster_version" {
+  description = "Kubernetes version for EKS"
   type        = string
+  default     = "1.29"
 }
 
-variable "k3s_instance_type" {
-  description = "EC2 instance type for K3s (t2.micro for free tier)"
-  type        = string
-  default     = "t2.micro"
-}
-
-variable "allowed_ssh_cidrs" {
-  description = "CIDR blocks allowed for SSH access"
+variable "eks_node_instance_types" {
+  description = "EC2 instance types for EKS worker nodes"
   type        = list(string)
-  default     = ["0.0.0.0/0"]  # 프로덕션에서는 특정 IP로 제한 필요
+  default     = ["t4g.medium"]
 }
 
-variable "argocd_admin_password" {
-  description = "ArgoCD admin password"
-  type        = string
-  sensitive   = true
+variable "eks_node_desired_size" {
+  description = "Desired number of worker nodes"
+  type        = number
+  default     = 2
+}
+
+variable "eks_node_min_size" {
+  description = "Minimum number of worker nodes"
+  type        = number
+  default     = 1
+}
+
+variable "eks_node_max_size" {
+  description = "Maximum number of worker nodes"
+  type        = number
+  default     = 3
 }
 
 # ============================================
 # RDS
 # ============================================
-variable "create_rds" {
-  description = "Whether to create RDS instance"
-  type        = bool
-  default     = true
-}
-
 variable "db_instance_class" {
-  description = "RDS instance class (db.t2.micro for free tier)"
+  description = "RDS instance class"
   type        = string
-  default     = "db.t2.micro"
+  default     = "db.t4g.micro"
 }
 
 variable "db_allocated_storage" {
-  description = "RDS allocated storage in GB (max 20 for free tier)"
+  description = "RDS allocated storage in GB"
   type        = number
   default     = 20
 }
 
-variable "db_name" {
-  description = "Database name"
-  type        = string
-  default     = "hamkkebu"
+variable "db_backup_retention_period" {
+  description = "Backup retention period (days)"
+  type        = number
+  default     = 7
 }
 
 variable "db_username" {
@@ -84,22 +85,22 @@ variable "db_username" {
   default     = "admin"
 }
 
-variable "db_password" {
-  description = "Database master password"
+variable "db_password_auth" {
+  description = "Database password for auth-service"
   type        = string
   sensitive   = true
 }
 
-variable "db_host" {
-  description = "Database host (for existing RDS or external DB)"
+variable "db_password_ledger" {
+  description = "Database password for ledger-service"
   type        = string
-  default     = ""
+  sensitive   = true
 }
 
-variable "db_port" {
-  description = "Database port"
+variable "db_password_transaction" {
+  description = "Database password for transaction-service"
   type        = string
-  default     = "3306"
+  sensitive   = true
 }
 
 # ============================================

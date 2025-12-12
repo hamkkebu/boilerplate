@@ -1,5 +1,5 @@
 # ============================================
-# Hamkkebu Dev Environment - Terraform Variables
+# Hamkkebu Dev Environment - EKS + RDS Configuration
 # ============================================
 # 사용법:
 # 1. 이 파일을 terraform.tfvars로 복사
@@ -17,43 +17,38 @@ aws_region   = "ap-northeast-2"
 vpc_cidr = "10.0.0.0/16"
 
 # ============================================
-# EC2 / K3s (프리티어)
+# EKS Settings
 # ============================================
-# EC2 Key Pair 이름 (AWS Console에서 미리 생성 필요)
-key_pair_name = "hamkkebu-dev-key"
-
-# 프리티어: t3.micro (ap-northeast-2 리전)
-# 참고: t2.micro는 일부 리전에서만 프리티어
-k3s_instance_type = "t3.micro"
-
-# SSH 접근 허용 IP (보안을 위해 본인 IP로 제한 권장)
-# 예: ["1.2.3.4/32"]
-allowed_ssh_cidrs = ["0.0.0.0/0"]
-
-# ArgoCD 관리자 비밀번호 (최소 8자)
-argocd_admin_password = "YourSecurePassword123!"
+eks_cluster_version     = "1.29"
+eks_node_instance_types = ["t4g.medium"]
+eks_node_desired_size   = 2
+eks_node_min_size       = 1
+eks_node_max_size       = 3
 
 # ============================================
-# RDS (프리티어)
+# RDS Settings (서비스별 3개)
 # ============================================
-create_rds = true
+db_instance_class          = "db.t4g.micro"
+db_allocated_storage       = 20
+db_backup_retention_period = 7
+db_username                = "admin"
 
-# 프리티어: db.t3.micro (ap-northeast-2 리전)
-# 참고: db.t2.micro는 일부 리전에서만 프리티어
-db_instance_class = "db.t3.micro"
-
-# 프리티어: 최대 20GB
-db_allocated_storage = 20
-
-db_name     = "hamkkebu"
-db_username = "admin"
-db_password = "YourDatabasePassword123!"
-
-# 기존 RDS 사용 시 (create_rds = false)
-# db_host = "your-rds-endpoint.ap-northeast-2.rds.amazonaws.com"
-# db_port = "3306"
+# 각 서비스별 DB 비밀번호 (필수 - 강력한 비밀번호 사용)
+db_password_auth        = "YourAuthDbPassword123!"
+db_password_ledger      = "YourLedgerDbPassword123!"
+db_password_transaction = "YourTransactionDbPassword123!"
 
 # ============================================
 # GitHub Actions
 # ============================================
 create_github_actions_user = true
+
+# ============================================
+# 예상 월 비용 (~$250)
+# ============================================
+# - EKS Control Plane: $73
+# - EC2 Worker Nodes (t4g.medium x 2): ~$60
+# - RDS (db.t4g.micro x 3): ~$45
+# - NAT Gateway: ~$45
+# - ALB: ~$22
+# - EBS/Storage: ~$10
