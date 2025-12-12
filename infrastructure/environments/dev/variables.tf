@@ -59,49 +59,11 @@ variable "eks_node_max_size" {
 }
 
 # ============================================
-# RDS
+# RDS는 각 서비스별 레포지토리에서 관리
+# - auth-service/infrastructure/
+# - ledger-service/infrastructure/
+# - transaction-service/infrastructure/
 # ============================================
-variable "db_instance_class" {
-  description = "RDS instance class"
-  type        = string
-  default     = "db.t4g.micro"
-}
-
-variable "db_allocated_storage" {
-  description = "RDS allocated storage in GB"
-  type        = number
-  default     = 20
-}
-
-variable "db_backup_retention_period" {
-  description = "Backup retention period (days)"
-  type        = number
-  default     = 7
-}
-
-variable "db_username" {
-  description = "Database master username"
-  type        = string
-  default     = "admin"
-}
-
-variable "db_password_auth" {
-  description = "Database password for auth-service"
-  type        = string
-  sensitive   = true
-}
-
-variable "db_password_ledger" {
-  description = "Database password for ledger-service"
-  type        = string
-  sensitive   = true
-}
-
-variable "db_password_transaction" {
-  description = "Database password for transaction-service"
-  type        = string
-  sensitive   = true
-}
 
 # ============================================
 # ECR / GitHub Actions

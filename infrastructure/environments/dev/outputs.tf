@@ -63,15 +63,9 @@ output "alb_controller_role_arn" {
 }
 
 # ============================================
-# RDS Outputs
+# EKS Cluster Security Group (서비스별 RDS에서 참조)
 # ============================================
-output "rds_endpoints" {
-  description = "RDS endpoints for each service"
-  value       = module.rds.endpoints
-}
-
-output "rds_connection_strings" {
-  description = "JDBC connection strings for each service"
-  value       = module.rds.connection_strings
-  sensitive   = true
+output "eks_cluster_security_group_id" {
+  description = "EKS cluster security group ID for RDS ingress rules"
+  value       = module.eks.cluster_security_group_id
 }

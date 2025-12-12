@@ -192,38 +192,8 @@ module "eks" {
 }
 
 # ============================================
-# RDS Module (서비스별 3개)
+# RDS는 각 서비스별 레포지토리에서 관리
+# - auth-service/infrastructure/
+# - ledger-service/infrastructure/
+# - transaction-service/infrastructure/
 # ============================================
-module "rds" {
-  source = "../../modules/rds"
-
-  project_name               = var.project_name
-  environment                = var.environment
-  vpc_id                     = aws_vpc.main.id
-  private_subnet_ids         = aws_subnet.private[*].id
-  allowed_security_group_ids = [module.eks.cluster_security_group_id]
-  instance_class             = var.db_instance_class
-  allocated_storage          = var.db_allocated_storage
-  backup_retention_period    = var.db_backup_retention_period
-
-  services = [
-    {
-      name     = "auth"
-      db_name  = "hamkkebu_auth"
-      username = var.db_username
-      password = var.db_password_auth
-    },
-    {
-      name     = "ledger"
-      db_name  = "hamkkebu_ledger"
-      username = var.db_username
-      password = var.db_password_ledger
-    },
-    {
-      name     = "transaction"
-      db_name  = "hamkkebu_transaction"
-      username = var.db_username
-      password = var.db_password_transaction
-    }
-  ]
-}

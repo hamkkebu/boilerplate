@@ -26,17 +26,11 @@ eks_node_min_size       = 1
 eks_node_max_size       = 3
 
 # ============================================
-# RDS Settings (서비스별 3개)
+# RDS는 각 서비스별 레포지토리에서 관리
 # ============================================
-db_instance_class          = "db.t4g.micro"
-db_allocated_storage       = 20
-db_backup_retention_period = 7
-db_username                = "admin"
-
-# 각 서비스별 DB 비밀번호 (필수 - 강력한 비밀번호 사용)
-db_password_auth        = "YourAuthDbPassword123!"
-db_password_ledger      = "YourLedgerDbPassword123!"
-db_password_transaction = "YourTransactionDbPassword123!"
+# - auth-service/infrastructure/
+# - ledger-service/infrastructure/
+# - transaction-service/infrastructure/
 
 # ============================================
 # GitHub Actions
@@ -44,11 +38,15 @@ db_password_transaction = "YourTransactionDbPassword123!"
 create_github_actions_user = true
 
 # ============================================
-# 예상 월 비용 (~$250)
+# 예상 월 비용 (공통 인프라만, ~$200)
 # ============================================
 # - EKS Control Plane: $73
 # - EC2 Worker Nodes (t4g.medium x 2): ~$60
-# - RDS (db.t4g.micro x 3): ~$45
 # - NAT Gateway: ~$45
 # - ALB: ~$22
 # - EBS/Storage: ~$10
+#
+# 각 서비스별 RDS는 해당 서비스 레포지토리에서 관리:
+# - auth-service RDS: ~$15
+# - ledger-service RDS: ~$15
+# - transaction-service RDS: ~$15
