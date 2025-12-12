@@ -26,44 +26,94 @@ variable "vpc_cidr" {
 }
 
 # ============================================
-# EKS
+# EC2 + K3s (Free Tier)
 # ============================================
-variable "eks_cluster_version" {
-  description = "Kubernetes version for EKS"
+variable "ec2_instance_type" {
+  description = "EC2 instance type (t2.micro for Free Tier)"
   type        = string
-  default     = "1.29"
+  default     = "t2.micro"
 }
 
-variable "eks_node_instance_types" {
-  description = "EC2 instance types for EKS worker nodes"
+variable "ec2_root_volume_size" {
+  description = "EC2 root volume size in GB (Free Tier: 30GB total)"
+  type        = number
+  default     = 20
+}
+
+variable "ec2_key_pair_name" {
+  description = "EC2 Key Pair name for SSH access"
+  type        = string
+  default     = null
+}
+
+variable "allowed_ssh_cidrs" {
+  description = "CIDR blocks allowed to SSH"
   type        = list(string)
-  default     = ["t4g.medium"]
+  default     = ["0.0.0.0/0"]
 }
 
-variable "eks_node_desired_size" {
-  description = "Desired number of worker nodes"
-  type        = number
-  default     = 2
-}
-
-variable "eks_node_min_size" {
-  description = "Minimum number of worker nodes"
-  type        = number
-  default     = 1
-}
-
-variable "eks_node_max_size" {
-  description = "Maximum number of worker nodes"
-  type        = number
-  default     = 3
+variable "use_elastic_ip" {
+  description = "Whether to assign an Elastic IP"
+  type        = bool
+  default     = false
 }
 
 # ============================================
-# RDS는 각 서비스별 레포지토리에서 관리
-# - auth-service/infrastructure/
-# - ledger-service/infrastructure/
-# - transaction-service/infrastructure/
+# RDS (Free Tier)
 # ============================================
+variable "rds_instance_class" {
+  description = "RDS instance class (db.t2.micro for Free Tier)"
+  type        = string
+  default     = "db.t2.micro"
+}
+
+variable "rds_engine_version" {
+  description = "MySQL engine version"
+  type        = string
+  default     = "8.0"
+}
+
+variable "rds_allocated_storage" {
+  description = "RDS allocated storage in GB (Free Tier: 20GB)"
+  type        = number
+  default     = 20
+}
+
+variable "rds_max_allocated_storage" {
+  description = "RDS max allocated storage for autoscaling (0 to disable)"
+  type        = number
+  default     = 0
+}
+
+variable "rds_initial_db_name" {
+  description = "Initial database name"
+  type        = string
+  default     = "hamkkebu"
+}
+
+variable "rds_master_username" {
+  description = "RDS master username"
+  type        = string
+  default     = "admin"
+}
+
+variable "rds_master_password" {
+  description = "RDS master password"
+  type        = string
+  sensitive   = true
+}
+
+variable "rds_backup_retention_period" {
+  description = "RDS backup retention period in days"
+  type        = number
+  default     = 7
+}
+
+variable "allowed_db_cidrs" {
+  description = "CIDR blocks allowed to access RDS (for local development)"
+  type        = list(string)
+  default     = []
+}
 
 # ============================================
 # ECR / GitHub Actions

@@ -1,9 +1,12 @@
 # ============================================
-# Hamkkebu Dev Environment - EKS + RDS Configuration
+# Hamkkebu Dev Environment - Free Tier Configuration
+# ============================================
+# EC2 (t2.micro) + K3s + RDS (db.t2.micro) 단일 인스턴스
+# AWS Free Tier 12개월 무료 사용 가능
 # ============================================
 # 사용법:
 # 1. 이 파일을 terraform.tfvars로 복사
-# 2. 실제 값으로 변경
+# 2. 실제 값으로 변경 (특히 rds_master_password!)
 # 3. terraform.tfvars는 .gitignore에 추가되어 있음
 # ============================================
 
@@ -17,20 +20,26 @@ aws_region   = "ap-northeast-2"
 vpc_cidr = "10.0.0.0/16"
 
 # ============================================
-# EKS Settings
+# EC2 + K3s Settings (Free Tier)
 # ============================================
-eks_cluster_version     = "1.29"
-eks_node_instance_types = ["t4g.medium"]
-eks_node_desired_size   = 2
-eks_node_min_size       = 1
-eks_node_max_size       = 3
+ec2_instance_type    = "t2.micro"   # Free Tier (750시간/월)
+ec2_root_volume_size = 20           # GB (Free Tier: 30GB까지)
+ec2_key_pair_name    = null         # AWS Console에서 생성한 Key Pair 이름
+allowed_ssh_cidrs    = ["0.0.0.0/0"] # 보안을 위해 특정 IP로 제한 권장
+use_elastic_ip       = false        # true면 인스턴스 중지 시 비용 발생
 
 # ============================================
-# RDS는 각 서비스별 레포지토리에서 관리
+# RDS Settings (Free Tier)
 # ============================================
-# - auth-service/infrastructure/
-# - ledger-service/infrastructure/
-# - transaction-service/infrastructure/
+rds_instance_class          = "db.t2.micro"  # Free Tier (750시간/월)
+rds_engine_version          = "8.0"
+rds_allocated_storage       = 20             # GB (Free Tier: 20GB)
+rds_max_allocated_storage   = 0              # 0 = autoscaling 비활성화
+rds_initial_db_name         = "hamkkebu"
+rds_master_username         = "admin"
+rds_master_password         = "YourSecurePassword123!"  # 반드시 변경!
+rds_backup_retention_period = 7              # days
+allowed_db_cidrs            = []             # 로컬 개발 시 IP 추가
 
 # ============================================
 # GitHub Actions
@@ -38,15 +47,35 @@ eks_node_max_size       = 3
 create_github_actions_user = true
 
 # ============================================
-# 예상 월 비용 (공통 인프라만, ~$200)
+# 예상 월 비용 (AWS Free Tier 12개월)
 # ============================================
-# - EKS Control Plane: $73
-# - EC2 Worker Nodes (t4g.medium x 2): ~$60
-# - NAT Gateway: ~$45
-# - ALB: ~$22
-# - EBS/Storage: ~$10
+# - EC2 (t2.micro): $0 (750시간/월 무료)
+# - RDS (db.t2.micro): $0 (750시간/월 무료)
+# - EBS (20GB x 2): $0 (30GB까지 무료)
+# - 데이터 전송: $0 (15GB/월 무료)
+# ============================================
+# 총 예상 비용: $0/월 (Free Tier 기간)
 #
-# 각 서비스별 RDS는 해당 서비스 레포지토리에서 관리:
-# - auth-service RDS: ~$15
-# - ledger-service RDS: ~$15
-# - transaction-service RDS: ~$15
+# * Free Tier 종료 후:
+# - EC2: ~$10/월
+# - RDS: ~$15/월
+# - Total: ~$25/월
+# ============================================
+
+# ============================================
+# 배포 후 필수 작업
+# ============================================
+# 1. EC2에 SSH 접속하여 K3s 설치 완료 확인:
+#    ssh -i <key.pem> ec2-user@<public-ip>
+#    kubectl get nodes
+#
+# 2. RDS에 접속하여 서비스별 데이터베이스 생성:
+#    mysql -h <rds-endpoint> -u admin -p
+#    CREATE DATABASE hamkkebu_auth CHARACTER SET utf8mb4;
+#    CREATE DATABASE hamkkebu_ledger CHARACTER SET utf8mb4;
+#    CREATE DATABASE hamkkebu_transaction CHARACTER SET utf8mb4;
+#
+# 3. K8s Secret 생성 (서비스별 DB 접속 정보):
+#    kubectl create secret generic auth-db-secret \
+#      --from-literal=DB_URL=jdbc:mysql://<rds>:3306/hamkkebu_auth...
+# ============================================

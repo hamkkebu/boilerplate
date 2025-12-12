@@ -1,0 +1,52 @@
+# ============================================
+# Hamkkebu Production Environment - EKS + RDS Configuration
+# ============================================
+# 사용법:
+# 1. 이 파일을 terraform.tfvars로 복사
+# 2. 실제 값으로 변경
+# 3. terraform.tfvars는 .gitignore에 추가되어 있음
+# ============================================
+
+project_name = "hamkkebu"
+environment  = "production"
+aws_region   = "ap-northeast-2"
+
+# ============================================
+# VPC
+# ============================================
+vpc_cidr = "10.1.0.0/16"
+
+# ============================================
+# EKS Settings
+# ============================================
+eks_cluster_version     = "1.29"
+eks_node_instance_types = ["t4g.medium"]
+eks_node_desired_size   = 2
+eks_node_min_size       = 2
+eks_node_max_size       = 5
+
+# ============================================
+# RDS는 각 서비스별 레포지토리에서 관리
+# ============================================
+# - auth-service/infrastructure/
+# - ledger-service/infrastructure/
+# - transaction-service/infrastructure/
+
+# ============================================
+# GitHub Actions
+# ============================================
+create_github_actions_user = true
+
+# ============================================
+# 예상 월 비용 (공통 인프라만, ~$200)
+# ============================================
+# - EKS Control Plane: $73
+# - EC2 Worker Nodes (t4g.medium x 2): ~$60
+# - NAT Gateway: ~$45
+# - ALB: ~$22
+# - EBS/Storage: ~$10
+#
+# 각 서비스별 RDS는 해당 서비스 레포지토리에서 관리:
+# - auth-service RDS: ~$15
+# - ledger-service RDS: ~$15
+# - transaction-service RDS: ~$15
