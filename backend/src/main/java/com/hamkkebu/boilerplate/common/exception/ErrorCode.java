@@ -156,6 +156,16 @@ public enum ErrorCode {
      */
     LEDGER_HAS_TRANSACTIONS("LEDGER-205", "거래 내역이 존재하는 가계부는 삭제할 수 없습니다", HttpStatus.BAD_REQUEST),
 
+    /**
+     * 카테고리를 찾을 수 없음
+     */
+    CATEGORY_NOT_FOUND("LEDGER-206", "카테고리를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
+
+    /**
+     * 카테고리 유형 불일치
+     */
+    CATEGORY_TYPE_MISMATCH("LEDGER-207", "부모 카테고리와 유형이 일치해야 합니다", HttpStatus.BAD_REQUEST),
+
     // ==================== 거래 관련 에러 (TRANSACTION-301 ~ 399) ====================
 
     /**
