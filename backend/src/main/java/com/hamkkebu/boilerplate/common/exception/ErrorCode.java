@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
  *   <li>LEDGER: 가계부 관련 (201-299)</li>
  *   <li>TRANSACTION: 거래 관련 (301-399)</li>
  *   <li>AUTH: 인증/인가 관련 (401-499)</li>
+ *   <li>KAFKA: 이벤트/메시징 관련 (501-599)</li>
+ *   <li>SHARE: 가계부 공유 관련 (801-899)</li>
  * </ul>
  */
 @Getter
@@ -165,6 +167,38 @@ public enum ErrorCode {
      * 카테고리 유형 불일치
      */
     CATEGORY_TYPE_MISMATCH("LEDGER-207", "부모 카테고리와 유형이 일치해야 합니다", HttpStatus.BAD_REQUEST),
+
+    // ==================== 가계부 공유 관련 에러 (SHARE-801 ~ 899) ====================
+
+    /**
+     * 공유를 찾을 수 없음
+     */
+    LEDGER_SHARE_NOT_FOUND("SHARE-801", "가계부 공유를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
+
+    /**
+     * 이미 공유된 가계부
+     */
+    LEDGER_SHARE_ALREADY_EXISTS("SHARE-802", "이미 공유된 가계부입니다", HttpStatus.CONFLICT),
+
+    /**
+     * 공유 권한 없음
+     */
+    LEDGER_SHARE_PERMISSION_DENIED("SHARE-803", "가계부 공유 권한이 없습니다", HttpStatus.FORBIDDEN),
+
+    /**
+     * 잘못된 공유 상태
+     */
+    LEDGER_SHARE_INVALID_STATUS("SHARE-804", "잘못된 공유 상태입니다", HttpStatus.BAD_REQUEST),
+
+    /**
+     * 자기 자신에게 공유 불가
+     */
+    CANNOT_SHARE_WITH_SELF("SHARE-805", "자기 자신에게는 공유할 수 없습니다", HttpStatus.BAD_REQUEST),
+
+    /**
+     * 잘못된 공유 권한 값
+     */
+    INVALID_SHARE_PERMISSION("SHARE-806", "잘못된 공유 권한 값입니다", HttpStatus.BAD_REQUEST),
 
     // ==================== 거래 관련 에러 (TRANSACTION-301 ~ 399) ====================
 

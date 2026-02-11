@@ -124,6 +124,11 @@ public class CommonConstants {
     public static final String TOPIC_TRANSACTION_EVENTS = "transaction.events";
 
     /**
+     * 가계부 공유 이벤트 토픽
+     */
+    public static final String TOPIC_LEDGER_SHARE_EVENTS = "ledger-share.events";
+
+    /**
      * 알림 이벤트 토픽
      */
     public static final String TOPIC_NOTIFICATION_EVENTS = "notification.events";
