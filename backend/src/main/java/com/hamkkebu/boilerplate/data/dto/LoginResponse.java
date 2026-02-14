@@ -21,13 +21,14 @@ public class LoginResponse {
     private String email;
     private TokenResponse token;
 
-    public static LoginResponse of(SampleResponse sample, TokenResponse token) {
+    public static LoginResponse of(String username, String firstName, String lastName,
+                                     String nickname, String email, TokenResponse token) {
         return LoginResponse.builder()
-            .username(sample.getUsername())
-            .firstName(sample.getFirstName())
-            .lastName(sample.getLastName())
-            .nickname(sample.getNickname())
-            .email(sample.getEmail())
+            .username(username)
+            .firstName(firstName)
+            .lastName(lastName)
+            .nickname(nickname)
+            .email(email)
             .token(token)
             .build();
     }
