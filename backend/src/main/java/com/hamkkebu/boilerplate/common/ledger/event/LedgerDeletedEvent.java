@@ -17,7 +17,6 @@ public class LedgerDeletedEvent extends BaseEvent {
     public static final String EVENT_TYPE = "LEDGER_DELETED";
 
     private Long ledgerId;
-    private Long userId;
 
     @Override
     public String getResourceId() {
@@ -28,6 +27,5 @@ public class LedgerDeletedEvent extends BaseEvent {
     public LedgerDeletedEvent(Long ledgerId, Long userId) {
         super(EVENT_TYPE, String.valueOf(ledgerId), String.valueOf(userId));
         this.ledgerId = ledgerId;
-        this.userId = userId;
     }
 }

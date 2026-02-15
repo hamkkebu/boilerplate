@@ -18,7 +18,6 @@ public class LedgerCreatedEvent extends BaseEvent {
     public static final String EVENT_TYPE = "LEDGER_CREATED";
 
     private Long ledgerId;
-    private Long userId;
     private String name;
     private String description;
     private String currency;
@@ -34,7 +33,6 @@ public class LedgerCreatedEvent extends BaseEvent {
                                String currency, Boolean isDefault) {
         super(EVENT_TYPE, String.valueOf(ledgerId), String.valueOf(userId));
         this.ledgerId = ledgerId;
-        this.userId = userId;
         this.name = name;
         this.description = description;
         this.currency = currency;
