@@ -12,6 +12,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 /**
  * 보안 감사 로그 시스템 (AOP 기반)
@@ -20,8 +21,7 @@ import java.time.LocalDateTime;
  *
  * <p>로깅 대상 이벤트:</p>
  * <ul>
- *   <li>회원가입</li>
- *   <li>회원 탈퇴</li>
+ *   <li>Rate Limit 초과</li>
  *   <li>권한 거부 (ACCESS_DENIED)</li>
  * </ul>
  *
@@ -39,35 +39,6 @@ import java.time.LocalDateTime;
 public class SecurityAuditLogger {
 
     /**
-     * 회원가입 로깅
-     */
-    @AfterReturning(
-            pointcut = "execution(* com.hamkkebu.boilerplate.service.SampleService.createSample(..))",
-            returning = "result"
-    )
-    public void logUserRegistration(JoinPoint joinPoint, Object result) {
-        String userId = extractUserIdFromArgs(joinPoint);
-        String ip = getClientIP();
-
-        log.info("[SECURITY_AUDIT] {} | EVENT=USER_REGISTRATION | USER={} | IP={} | STATUS=SUCCESS",
-                LocalDateTime.now(), userId, ip);
-    }
-
-    /**
-     * 회원 탈퇴 로깅
-     */
-    @AfterReturning(
-            pointcut = "execution(* com.hamkkebu.boilerplate.service.SampleService.deleteSample(..))"
-    )
-    public void logUserDeletion(JoinPoint joinPoint) {
-        String userId = extractUserIdFromArgs(joinPoint);
-        String ip = getClientIP();
-
-        log.info("[SECURITY_AUDIT] {} | EVENT=USER_DELETION | USER={} | IP={} | STATUS=SUCCESS",
-                LocalDateTime.now(), userId, ip);
-    }
-
-    /**
      * Rate Limit 초과 로깅
      */
     @AfterReturning(
@@ -80,15 +51,15 @@ public class SecurityAuditLogger {
             String ip = getClientIP();
 
             log.warn("[SECURITY_AUDIT] {} | EVENT=RATE_LIMIT_EXCEEDED | KEY={} | IP={} | STATUS=BLOCKED",
-                    LocalDateTime.now(), key, ip);
+                    LocalDateTime.now(ZoneId.systemDefault()), key, ip);
         }
     }
 
     /**
-     * 권한 거부 로깅 (IDOR 등)
+     * 권한 거부 로깅
      */
     @AfterThrowing(
-            pointcut = "execution(* com.hamkkebu.boilerplate.controller..*(..))",
+            pointcut = "execution(* com.hamkkebu..controller..*(..))",
             throwing = "ex"
     )
     public void logAccessDenied(JoinPoint joinPoint, Exception ex) {
@@ -98,7 +69,7 @@ public class SecurityAuditLogger {
             String method = joinPoint.getSignature().toShortString();
 
             log.warn("[SECURITY_AUDIT] {} | EVENT=ACCESS_DENIED | USER={} | IP={} | METHOD={} | STATUS=DENIED | REASON={}",
-                    LocalDateTime.now(), userId, ip, method, ex.getMessage());
+                    LocalDateTime.now(ZoneId.systemDefault()), userId, ip, method, ex.getMessage());
         }
     }
 
@@ -112,24 +83,6 @@ public class SecurityAuditLogger {
             return authentication.getName();
         }
         return "ANONYMOUS";
-    }
-
-    /**
-     * 메서드 인자에서 사용자 ID 추출
-     */
-    private String extractUserIdFromArgs(JoinPoint joinPoint) {
-        Object[] args = joinPoint.getArgs();
-        if (args.length > 0 && args[0] != null) {
-            // LoginRequest 또는 RequestSample에서 ID 추출
-            String argString = args[0].toString();
-            if (argString.contains("sampleId=")) {
-                int startIdx = argString.indexOf("sampleId=") + 9;
-                int endIdx = argString.indexOf(",", startIdx);
-                if (endIdx == -1) endIdx = argString.indexOf(")", startIdx);
-                return argString.substring(startIdx, endIdx).trim();
-            }
-        }
-        return "UNKNOWN";
     }
 
     /**
