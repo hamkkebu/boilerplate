@@ -11,7 +11,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  *
  * <p>Rate Limiting Interceptor 등록</p>
  */
-@Configuration
+@Configuration("boilerplateWebMvcConfig")
 @RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
 
