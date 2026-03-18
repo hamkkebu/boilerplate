@@ -3,9 +3,7 @@ package com.hamkkebu.boilerplate.common.ledger.entity;
 import com.hamkkebu.boilerplate.common.entity.BaseEntity;
 import com.hamkkebu.boilerplate.common.enums.MemberRole;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
