@@ -1,29 +1,26 @@
 /* Hamkkebu Custom Keycloak Theme */
-/* Matching auth-service login form design */
+/* Light theme - Matching React frontend design */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 
 :root {
-  --bg-primary: #0f0f1a;
-  --bg-secondary: #1a1a2e;
-  --bg-tertiary: #16213e;
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  --gradient-brand: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
-  --text-primary: rgba(255, 255, 255, 0.95);
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --text-tertiary: rgba(255, 255, 255, 0.5);
-  --text-muted: rgba(255, 255, 255, 0.3);
-  --accent-purple: #6366f1;
-  --accent-violet: #8b5cf6;
-  --input-bg: rgba(255, 255, 255, 0.05);
-  --input-border: rgba(255, 255, 255, 0.1);
+  --color-primary: #4a90d9;
+  --color-primary-dark: #357abd;
+  --color-bg: #f5f7fa;
+  --color-white: #ffffff;
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-text-muted: #999999;
+  --color-border: #e1e5eb;
+  --color-input-bg: #ffffff;
+  --color-input-border: #e1e5eb;
+  --gradient-primary: linear-gradient(135deg, #4a90d9 0%, #357abd 100%);
+  --gradient-brand: linear-gradient(135deg, #4a90d9 0%, #357abd 100%);
+  --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
 }
 
 * {
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-family);
   box-sizing: border-box;
 }
 
@@ -31,12 +28,12 @@ html, body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%) !important;
+  background: var(--color-bg) !important;
   background-attachment: fixed !important;
   overflow-x: hidden;
 }
 
-/* Floating Orbs */
+/* Floating Orbs - soft light version */
 body::before {
   content: '';
   position: fixed;
@@ -44,7 +41,7 @@ body::before {
   right: -10%;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(74, 144, 217, 0.08) 0%, transparent 70%);
   border-radius: 50%;
   filter: blur(80px);
   animation: pulse 8s ease-in-out infinite;
@@ -59,7 +56,7 @@ body::after {
   left: -5%;
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(236, 72, 153, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(53, 122, 189, 0.06) 0%, transparent 70%);
   border-radius: 50%;
   filter: blur(80px);
   animation: pulse 10s ease-in-out infinite reverse;
@@ -123,31 +120,31 @@ body::after {
 
 /* Login Card */
 .login-pf-page .card-pf {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid var(--glass-border) !important;
-  border-radius: 24px !important;
+  background: var(--color-white) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 16px !important;
   padding: 48px 40px !important;
   width: 420px !important;
   max-width: calc(100vw - 40px) !important;
-  box-shadow: var(--glass-shadow) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
   animation: slideUp 0.6s ease-out;
   position: relative;
   display: flex !important;
   flex-direction: column !important;
 }
 
-/* Logo at Top - Using absolute positioning */
+/* Logo at Top */
 .login-pf-page .card-pf::before {
   content: '';
   display: block;
-  width: 72px;
-  height: 72px;
+  width: 48px;
+  height: 48px;
   background: var(--gradient-brand);
-  border-radius: 18px;
+  border-radius: 12px;
   margin: 0 auto 28px;
-  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(74, 144, 217, 0.25);
   order: -1;
 }
 
@@ -171,19 +168,19 @@ body::after {
 }
 
 .login-title h1 {
-  font-family: 'Space Grotesk', sans-serif !important;
-  font-size: 28px !important;
+  font-family: var(--font-family) !important;
+  font-size: 24px !important;
   font-weight: 700 !important;
-  color: var(--text-primary) !important;
+  color: var(--color-text) !important;
   margin: 0 0 8px 0 !important;
-  letter-spacing: -0.5px !important;
+  letter-spacing: -0.3px !important;
 }
 
 .login-title p {
-  font-family: 'DM Sans', sans-serif !important;
-  font-size: 15px !important;
+  font-family: var(--font-family) !important;
+  font-size: 14px !important;
   font-weight: 400 !important;
-  color: var(--text-tertiary) !important;
+  color: var(--color-text-muted) !important;
   margin: 0 !important;
 }
 
@@ -210,12 +207,12 @@ body::after {
 .login-pf label[for="password-confirm"] {
   font-size: 14px !important;
   font-weight: 500 !important;
-  color: var(--text-secondary) !important;
+  color: var(--color-text-light) !important;
   margin-bottom: 8px !important;
   display: block !important;
 }
 
-/* All Input Fields - Ultra specific selectors */
+/* All Input Fields */
 input#username,
 input#password,
 input#password-new,
@@ -234,15 +231,15 @@ input#user\.attributes\.phoneNumber,
 #kc-form-login input[type="password"],
 .form-group input {
   width: 100% !important;
-  height: 52px !important;
+  height: 48px !important;
   padding: 0 16px !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 12px !important;
+  background: var(--color-input-bg) !important;
+  background-color: var(--color-input-bg) !important;
+  border: 1px solid var(--color-input-border) !important;
+  border-radius: 10px !important;
   font-size: 15px !important;
-  color: rgba(255, 255, 255, 0.95) !important;
-  transition: all 0.3s ease !important;
+  color: var(--color-text) !important;
+  transition: all 0.2s ease !important;
   outline: none !important;
   box-sizing: border-box !important;
   display: block !important;
@@ -259,13 +256,13 @@ input#user\.attributes\.phoneNumber,
 
 .pf-c-input-group input,
 .pf-c-input-group .pf-c-form-control {
-  background: rgba(255, 255, 255, 0.05) !important;
-  background-color: rgba(255, 255, 255, 0.05) !important;
+  background: var(--color-input-bg) !important;
+  background-color: var(--color-input-bg) !important;
 }
 
 /* Input Placeholder */
 .login-pf-page input::placeholder {
-  color: var(--text-muted) !important;
+  color: var(--color-text-muted) !important;
 }
 
 /* Input Focus */
@@ -274,17 +271,16 @@ input#user\.attributes\.phoneNumber,
 .login-pf-page input[type="email"]:focus,
 input#username:focus,
 input#password:focus {
-  border-color: rgba(99, 102, 241, 0.5) !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+  border-color: var(--color-primary) !important;
+  background: var(--color-white) !important;
+  box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.12) !important;
 }
 
 /* Input Hover */
 .login-pf-page input[type="text"]:hover,
 .login-pf-page input[type="password"]:hover,
 .login-pf-page input[type="email"]:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
+  border-color: #c8ced6 !important;
 }
 
 /* Form Options - Remember Me & Forgot Password */
@@ -315,7 +311,7 @@ input#password:focus {
 .login-pf-page .checkbox label,
 label[for="rememberMe"] {
   font-size: 14px !important;
-  color: var(--text-secondary) !important;
+  color: var(--color-text-light) !important;
   cursor: pointer !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -336,12 +332,12 @@ input#rememberMe {
   min-width: 18px !important;
   max-width: 18px !important;
   cursor: pointer !important;
-  accent-color: var(--accent-purple) !important;
+  accent-color: var(--color-primary) !important;
   margin: 0 !important;
   margin-right: 8px !important;
   flex-shrink: 0 !important;
-  background: var(--input-bg) !important;
-  border: 1px solid var(--input-border) !important;
+  background: var(--color-white) !important;
+  border: 1px solid var(--color-border) !important;
   border-radius: 4px !important;
   padding: 0 !important;
   position: relative !important;
@@ -353,13 +349,13 @@ input#rememberMe {
 #kc-form-options a,
 .login-pf-page a[href*="reset"] {
   font-size: 14px !important;
-  color: var(--accent-purple) !important;
+  color: var(--color-primary) !important;
   text-decoration: none !important;
   font-weight: 500 !important;
 }
 
 #kc-form-options a:hover {
-  color: var(--accent-violet) !important;
+  color: var(--color-primary-dark) !important;
 }
 
 /* Buttons Container */
@@ -375,17 +371,17 @@ input#rememberMe {
 .btn-primary,
 button[type="submit"] {
   width: 100% !important;
-  height: 52px !important;
+  height: 48px !important;
   padding: 0 24px !important;
   background: var(--gradient-primary) !important;
   color: white !important;
   border: none !important;
-  border-radius: 12px !important;
+  border-radius: 10px !important;
   font-size: 15px !important;
   font-weight: 600 !important;
   cursor: pointer !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3) !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 8px rgba(74, 144, 217, 0.25) !important;
   text-transform: none !important;
   letter-spacing: 0 !important;
   display: block !important;
@@ -396,8 +392,8 @@ button[type="submit"] {
 #kc-login:hover,
 #kc-form-buttons input[type="submit"]:hover,
 .btn-primary:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 20px 40px rgba(99, 102, 241, 0.4) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(74, 144, 217, 0.35) !important;
 }
 
 #kc-login:active,
@@ -410,7 +406,7 @@ button[type="submit"] {
   text-align: center !important;
   margin-top: 32px !important;
   padding: 24px 0 0 0 !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-top: 1px solid var(--color-border) !important;
   position: relative !important;
   width: 100% !important;
   box-sizing: border-box !important;
@@ -418,7 +414,7 @@ button[type="submit"] {
 
 #kc-registration > span {
   display: block !important;
-  color: var(--text-muted) !important;
+  color: var(--color-text-muted) !important;
   font-size: 14px !important;
   margin-bottom: 12px !important;
   line-height: 1 !important;
@@ -427,18 +423,18 @@ button[type="submit"] {
 #kc-registration a {
   display: block !important;
   width: 100% !important;
-  height: 52px !important;
-  line-height: 50px !important;
-  background: var(--input-bg) !important;
-  border: 1px solid var(--input-border) !important;
-  border-radius: 12px !important;
-  color: var(--text-primary) !important;
+  height: 48px !important;
+  line-height: 46px !important;
+  background: var(--color-bg) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 10px !important;
+  color: var(--color-text) !important;
   font-weight: 600 !important;
   font-size: 15px !important;
   text-align: center !important;
   box-sizing: border-box !important;
   text-decoration: none !important;
-  transition: all 0.3s ease !important;
+  transition: all 0.2s ease !important;
   margin: 0 !important;
 }
 
@@ -451,67 +447,66 @@ button[type="submit"] {
 }
 
 #kc-registration a:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
-  transform: translateY(-2px) !important;
+  background: #edf0f5 !important;
+  border-color: #c8ced6 !important;
+  transform: translateY(-1px) !important;
   text-shadow: none !important;
 }
 
 /* Links */
 a {
-  color: var(--accent-purple) !important;
+  color: var(--color-primary) !important;
   text-decoration: none !important;
   transition: all 0.2s ease !important;
 }
 
 a:hover {
-  color: var(--accent-violet) !important;
+  color: var(--color-primary-dark) !important;
 }
 
 /* Alerts */
 .alert {
-  border-radius: 12px !important;
+  border-radius: 10px !important;
   padding: 14px 16px !important;
   margin-bottom: 20px !important;
   border: 1px solid !important;
-  backdrop-filter: blur(10px) !important;
   font-size: 14px !important;
 }
 
 .alert-error,
 .alert-danger {
-  background: rgba(239, 68, 68, 0.1) !important;
-  color: #f87171 !important;
-  border-color: rgba(239, 68, 68, 0.3) !important;
+  background: #fef2f2 !important;
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.2) !important;
 }
 
 .alert-warning {
-  background: rgba(245, 158, 11, 0.1) !important;
-  color: #fcd34d !important;
-  border-color: rgba(245, 158, 11, 0.3) !important;
+  background: #fffbeb !important;
+  color: #d97706 !important;
+  border-color: rgba(245, 158, 11, 0.2) !important;
 }
 
 .alert-success {
-  background: rgba(34, 197, 94, 0.1) !important;
-  color: #86efac !important;
-  border-color: rgba(34, 197, 94, 0.3) !important;
+  background: #f0fdf4 !important;
+  color: #16a34a !important;
+  border-color: rgba(34, 197, 94, 0.2) !important;
 }
 
 .alert-info {
-  background: rgba(59, 130, 246, 0.1) !important;
-  color: #93c5fd !important;
-  border-color: rgba(59, 130, 246, 0.3) !important;
+  background: #eff6ff !important;
+  color: #3b82f6 !important;
+  border-color: rgba(59, 130, 246, 0.2) !important;
 }
 
 /* Social Login */
 #kc-social-providers {
   margin-top: 24px !important;
   padding-top: 24px !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-top: 1px solid var(--color-border) !important;
 }
 
 #kc-social-providers h4 {
-  color: var(--text-muted) !important;
+  color: var(--color-text-muted) !important;
   font-size: 14px !important;
   text-align: center !important;
   margin-bottom: 16px !important;
@@ -532,25 +527,25 @@ a:hover {
 .zocial {
   display: block !important;
   width: 100% !important;
-  height: 52px !important;
-  line-height: 50px !important;
-  background: var(--input-bg) !important;
-  border: 1px solid var(--input-border) !important;
-  border-radius: 12px !important;
-  color: var(--text-primary) !important;
+  height: 48px !important;
+  line-height: 46px !important;
+  background: var(--color-bg) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 10px !important;
+  color: var(--color-text) !important;
   font-weight: 600 !important;
   font-size: 15px !important;
   text-align: center !important;
-  transition: all 0.3s ease !important;
+  transition: all 0.2s ease !important;
   box-sizing: border-box !important;
   text-decoration: none !important;
 }
 
 #kc-social-providers a:hover,
 .zocial:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
-  transform: translateY(-2px) !important;
+  background: #edf0f5 !important;
+  border-color: #c8ced6 !important;
+  transform: translateY(-1px) !important;
 }
 
 /* Info section */
@@ -561,7 +556,7 @@ a:hover {
 
 #kc-info .kc-info-message {
   font-size: 13px !important;
-  color: var(--text-muted) !important;
+  color: var(--color-text-muted) !important;
 }
 
 /* Custom Password Wrapper */
@@ -582,7 +577,7 @@ a:hover {
   transform: translateY(-50%) !important;
   background: none !important;
   border: none !important;
-  color: rgba(255, 255, 255, 0.4) !important;
+  color: var(--color-text-muted) !important;
   cursor: pointer !important;
   padding: 4px !important;
   display: flex !important;
@@ -592,7 +587,7 @@ a:hover {
 }
 
 .password-toggle:hover {
-  color: rgba(255, 255, 255, 0.7) !important;
+  color: var(--color-text-light) !important;
 }
 
 .password-toggle svg {
@@ -628,7 +623,7 @@ div:has(> input[type="password"]) {
 span.error-text,
 .input-error {
   display: block !important;
-  color: #f87171 !important;
+  color: #ef4444 !important;
   font-size: 13px !important;
   margin-top: 6px !important;
   padding-left: 2px !important;
@@ -645,7 +640,7 @@ span.error-text,
 
 /* Back to Login link styling */
 #kc-registration span {
-  color: var(--text-muted) !important;
+  color: var(--color-text-muted) !important;
   font-size: 14px !important;
 }
 
@@ -655,11 +650,11 @@ span.error-text,
     padding: 36px 24px !important;
     width: calc(100% - 32px) !important;
     margin: 16px !important;
-    border-radius: 20px !important;
+    border-radius: 14px !important;
   }
 
   #kc-page-title {
-    font-size: 24px !important;
+    font-size: 22px !important;
   }
 
   body::before {
@@ -673,28 +668,42 @@ span.error-text,
   }
 }
 
-/* Scrollbar */
+/* Scrollbar - auto hide */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+html:hover {
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  background: transparent;
+  border-radius: 3px;
+  transition: background 0.3s ease;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+html:hover ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+html:hover ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
 }
 
 ::selection {
-  background: rgba(99, 102, 241, 0.4);
-  color: white;
+  background: rgba(74, 144, 217, 0.2);
+  color: var(--color-text);
 }
 
 /* Hide any extra elements at bottom */
@@ -706,16 +715,16 @@ span.error-text,
 .btn-default,
 input.btn-default {
   width: 100% !important;
-  height: 52px !important;
+  height: 48px !important;
   padding: 0 24px !important;
-  background: var(--input-bg) !important;
-  color: var(--text-primary) !important;
-  border: 1px solid var(--input-border) !important;
-  border-radius: 12px !important;
+  background: var(--color-bg) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 10px !important;
   font-size: 15px !important;
   font-weight: 600 !important;
   cursor: pointer !important;
-  transition: all 0.3s ease !important;
+  transition: all 0.2s ease !important;
   display: block !important;
   box-sizing: border-box !important;
   margin-top: 12px !important;
@@ -724,9 +733,9 @@ input.btn-default {
 
 .btn-default:hover,
 input.btn-default:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
-  transform: translateY(-2px) !important;
+  background: #edf0f5 !important;
+  border-color: #c8ced6 !important;
+  transform: translateY(-1px) !important;
 }
 
 /* Ensure proper stacking */

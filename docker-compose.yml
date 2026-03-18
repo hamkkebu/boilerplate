@@ -1,32 +1,32 @@
 services:
   # MySQL Database
-  database:
-    image: mysql:8.0
-    container_name: hamkkebu-boilerplate-db
-    # SECURITY: 포트를 127.0.0.1로 바인딩 (외부 접근 차단)
-    # 프로덕션에서는 포트 매핑 제거 권장 (내부 네트워크만 사용)
-    ports:
-      - "127.0.0.1:3306:3306"
-    environment:
-      - MYSQL_ROOT_HOST=%
-      # SECURITY: 환경변수로 비밀번호 주입 (.env 파일 사용)
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
-      - MYSQL_DATABASE=${MYSQL_DATABASE:-hamkkebu_boilerplate_db}
-    volumes:
-      - mysql-data:/var/lib/mysql
-    networks:
-      - boilerplate-internal
-    # MySQL은 기본 사용자(mysql)로 실행 - 볼륨 쓰기 권한 보장
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+#  database:
+#    image: mysql:8.0
+#    container_name: hamkkebu-boilerplate-db
+#    # SECURITY: 포트를 127.0.0.1로 바인딩 (외부 접근 차단)
+#    # 프로덕션에서는 포트 매핑 제거 권장 (내부 네트워크만 사용)
+#    ports:
+#      - "127.0.0.1:3306:3306"
+#    environment:
+#      - MYSQL_ROOT_HOST=%
+#      # SECURITY: 환경변수로 비밀번호 주입 (.env 파일 사용)
+#      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+#      - MYSQL_DATABASE=${MYSQL_DATABASE:-hamkkebu_boilerplate_db}
+#    volumes:
+#      - mysql-data:/var/lib/mysql
+#    networks:
+#      - boilerplate-internal
+#    # MySQL은 기본 사용자(mysql)로 실행 - 볼륨 쓰기 권한 보장
+#    healthcheck:
+#      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
 
   # Zookeeper (Kafka 의존성) - 공유 인프라
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
-    container_name: hamkkebu-boilerplate-zookeeper
+    container_name: hamkkebu-zookeeper
     # SECURITY: 포트를 127.0.0.1로 바인딩 (외부 접근 차단)
     ports:
       - "127.0.0.1:2181:2181"
@@ -34,7 +34,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     networks:
-      - boilerplate-internal
+#      - boilerplate-internal
       - hamkkebu-infra
     # Zookeeper는 기본 사용자로 실행 - 볼륨 쓰기 권한 보장
     healthcheck:
@@ -46,7 +46,7 @@ services:
   # Kafka - 공유 인프라
   kafka:
     image: confluentinc/cp-kafka:7.5.0
-    container_name: hamkkebu-boilerplate-kafka
+    container_name: hamkkebu-kafka
     # SECURITY: 포트를 127.0.0.1로 바인딩 (외부 접근 차단)
     ports:
       - "127.0.0.1:9092:9092"
@@ -54,7 +54,7 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://hamkkebu-boilerplate-kafka:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://hamkkebu-kafka:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -65,7 +65,7 @@ services:
       zookeeper:
         condition: service_healthy
     networks:
-      - boilerplate-internal
+#      - boilerplate-internal
       - hamkkebu-infra
     # Kafka는 기본 사용자로 실행 - 볼륨 쓰기 권한 보장
     healthcheck:
@@ -78,23 +78,23 @@ services:
   # SECURITY: 프로덕션 환경에서는 제거 권장
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
-    container_name: hamkkebu-boilerplate-kafka-ui
+    container_name: hamkkebu-kafka-ui
     # SECURITY: 포트를 127.0.0.1로 바인딩 (외부 접근 차단)
     ports:
       - "127.0.0.1:8989:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: hamkkebu-boilerplate-kafka:29092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: hamkkebu-boilerplate-zookeeper:2181
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: hamkkebu-kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: hamkkebu-zookeeper:2181
     depends_on:
       - kafka
     networks:
-      - boilerplate-internal
+#      - boilerplate-internal
       - hamkkebu-infra
     # 프로덕션 배포 시 이 서비스 제거:
     # docker-compose up -d database redis kafka backend frontend
-    profiles:
-      - dev  # 개발 환경에서만 실행
+#    profiles:
+#      - dev  # 개발 환경에서만 실행
 
   # Keycloak Database (PostgreSQL)
   keycloak-db:
@@ -126,7 +126,7 @@ services:
     environment:
       # Admin credentials
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-Hamkkebu2024!}
       # Database configuration
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://keycloak-db:5432/${KEYCLOAK_DB_NAME:-keycloak}
@@ -158,57 +158,57 @@ services:
       start_period: 60s
 
   # Backend
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: hamkkebu-boilerplate-backend
-    ports:
-      # boilerplate는 8080 포트 사용 (auth-service는 8081)
-      - "${BACKEND_PORT:-8080}:8080"
-      # gRPC 포트 (boilerplate는 9090, auth-service는 9091)
-      - "${GRPC_PORT:-9090}:9090"
-    environment:
-      # SECURITY: 환경변수로 주입 (.env 파일 사용)
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
-      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/${MYSQL_DATABASE:-hamkkebu_boilerplate_db}
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SPRING_KAFKA_CONSUMER_GROUP_ID: boilerplate-service-group
-      # JWT Secret (최소 32 bytes 권장)
-      JWT_SECRET: ${JWT_SECRET:-ThisIsADevelopmentSecretKeyPleaseChangeInProduction32Bytes}
-      # gRPC 클라이언트 설정 (auth-service 연결)
-      GRPC_CLIENT_USER_SERVICE_ADDRESS: ${USER_SERVICE_GRPC_ADDRESS:-static://hamkkebu-auth-service-backend:9091}
-    restart: "no"
-    depends_on:
-      database:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-    networks:
-      - boilerplate-internal
-      - hamkkebu-infra
+#  backend:
+#    build:
+#      context: ./backend
+#      dockerfile: Dockerfile
+#    container_name: hamkkebu-boilerplate-backend
+#    ports:
+#      # boilerplate는 8080 포트 사용 (auth-service는 8081)
+#      - "${BACKEND_PORT:-8080}:8080"
+#      # gRPC 포트 (boilerplate는 9090, auth-service는 9091)
+#      - "${GRPC_PORT:-9090}:9090"
+#    environment:
+#      # SECURITY: 환경변수로 주입 (.env 파일 사용)
+#      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+#      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/${MYSQL_DATABASE:-hamkkebu_boilerplate_db}
+#      SPRING_DATASOURCE_USERNAME: root
+#      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+#      SPRING_KAFKA_CONSUMER_GROUP_ID: boilerplate-service-group
+#      # JWT Secret (최소 32 bytes 권장)
+#      JWT_SECRET: ${JWT_SECRET:-ThisIsADevelopmentSecretKeyPleaseChangeInProduction32Bytes}
+#      # gRPC 클라이언트 설정 (auth-service 연결)
+#      GRPC_CLIENT_USER_SERVICE_ADDRESS: ${USER_SERVICE_GRPC_ADDRESS:-static://hamkkebu-auth-service-backend:9091}
+#    restart: "no"
+#    depends_on:
+#      database:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#    networks:
+#      - boilerplate-internal
+#      - hamkkebu-infra
 
   # Frontend
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: hamkkebu-boilerplate-frontend
-    ports:
-      # Boilerplate Frontend는 3000 포트 사용 (Auth Service는 3001)
-      - "${FRONTEND_PORT:-3000}:80"
-    restart: always
-    depends_on:
-      - backend
-    networks:
-      - boilerplate-internal
+#  frontend:
+#    build:
+#      context: ./frontend
+#      dockerfile: Dockerfile
+#    container_name: hamkkebu-boilerplate-frontend
+#    ports:
+#      # Boilerplate Frontend는 3000 포트 사용 (Auth Service는 3001)
+#      - "${FRONTEND_PORT:-3000}:80"
+#    restart: always
+#    depends_on:
+#      - backend
+#    networks:
+#      - boilerplate-internal
 
 networks:
   # 내부 전용 네트워크 (DB 격리)
-  boilerplate-internal:
-    driver: bridge
+#  boilerplate-internal:
+#    driver: bridge
 
   # 공유 인프라 네트워크 (Redis, Kafka, 서비스 간 통신)
   hamkkebu-infra:
@@ -216,5 +216,5 @@ networks:
     driver: bridge
 
 volumes:
-  mysql-data:
+#  mysql-data:
   keycloak-db-data:

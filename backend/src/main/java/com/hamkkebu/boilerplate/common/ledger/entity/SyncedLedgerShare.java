@@ -51,7 +51,7 @@ public abstract class SyncedLedgerShare extends BaseEntity {
     private Long sharedUserId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
+    @Column(name = "share_status", nullable = false, length = 20)
     @Builder.Default
     private ShareStatus status = ShareStatus.PENDING;
 

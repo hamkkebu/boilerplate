@@ -48,9 +48,9 @@ public class OutboxEventScheduler {
     /**
      * Outbox 이벤트를 Kafka로 발행
      *
-     * <p>5초마다 실행되어 PENDING 상태의 이벤트를 처리</p>
+     * <p>1초마다 실행되어 PENDING 상태의 이벤트를 처리</p>
      */
-    @Scheduled(fixedDelay = 5000) // 5초마다 실행
+    @Scheduled(fixedDelay = 1000) // 1초마다 실행
     @Transactional
     public void publishPendingEvents() {
         // PENDING 상태의 이벤트 조회

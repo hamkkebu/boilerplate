@@ -1,0 +1,48 @@
+# ============================================
+# GCP Dev Environment 설정 예시
+# ============================================
+# 이 파일을 terraform.tfvars로 복사한 후 값을 수정하세요.
+# cp terraform.tfvars.example terraform.tfvars
+# ============================================
+
+# GCP 프로젝트 설정 (필수)
+gcp_project_id = "your-gcp-project-id"
+gcp_region     = "us-west1"       # Always Free 지원 리전
+gcp_zone       = "us-west1-b"
+
+# GCE 설정 (Always Free)
+gce_machine_type   = "e2-micro"   # Always Free: 1 인스턴스
+gce_boot_disk_size = 30           # Always Free: 30GB standard
+
+# SSH 설정
+ssh_user       = "hamkkebu"
+ssh_public_key = "ssh-rsa AAAA... user@host"  # bootstrap에서 생성된 공개키
+allowed_ssh_cidrs = ["0.0.0.0/0"]              # 보안을 위해 IP 제한 권장
+
+# Static IP (선택, 비용 발생 가능)
+use_static_ip = false
+
+# Database (VM 내부 Docker MySQL)
+db_root_password = "your-secure-password"
+
+# GitHub Actions CI/CD (선택)
+create_github_actions_sa = true
+github_repository = "your-github-org/hamkkebu"  # Workload Identity용
+
+# ============================================
+# 예상 비용 (Always Free, 기간 제한 없음!)
+# ============================================
+# - GCE e2-micro:     $0/월 (Always Free)
+# - 30GB Standard PD: $0/월 (Always Free)
+# - Artifact Registry: $0/월 (500MB 무료)
+# - Cloud NAT:        ~$1/월
+# - 총 예상:          ~$1/월
+#
+# 비교: AWS Free Tier는 12개월 후 ~$25/월
+# ============================================
+#
+# 배포 후 확인사항:
+# 1. terraform output k3s_ssh_command 으로 SSH 접속
+# 2. kubectl get nodes 로 K3s 클러스터 확인
+# 3. docker exec hamkkebu-mysql mysql -u root -p 로 DB 접속
+# ============================================

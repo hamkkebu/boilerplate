@@ -75,7 +75,7 @@ public class OutboxEvent {
      * 이벤트 상태 (PENDING, PUBLISHED, FAILED)
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
+    @Column(name = "event_status", nullable = false, length = 20)
     @Builder.Default
     private OutboxEventStatus status = OutboxEventStatus.PENDING;
 

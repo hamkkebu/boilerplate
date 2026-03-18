@@ -1,0 +1,28 @@
+# ============================================
+# GCP Production Environment 설정 예시
+# ============================================
+
+# GCP 프로젝트 설정 (필수)
+gcp_project_id = "your-gcp-project-id"
+gcp_region     = "asia-northeast3"  # 서울
+
+# GKE 설정
+deletion_protection = true
+
+# GitHub Actions CI/CD
+create_github_actions_sa = true
+github_repository = "your-github-org/hamkkebu"
+
+# ============================================
+# 예상 비용
+# ============================================
+# - GKE Autopilot: ~$73/월 (+ 워크로드 과금)
+# - Cloud NAT: ~$1/월
+# - Cloud LB: ~$18/월
+# - 공통 인프라: ~$92/월
+#
+# Cloud SQL은 서비스별 레포지토리에서 관리:
+# - auth-service/infrastructure-gcp/
+# - ledger-service/infrastructure-gcp/
+# - transaction-service/infrastructure-gcp/
+# ============================================

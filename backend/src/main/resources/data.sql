@@ -1,11 +1,4 @@
--- 테스트 계정: k1m743hyun / password123
--- BCrypt 해시는 Spring Security BCryptPasswordEncoder로 생성
-INSERT INTO tbl_boilerplate_sample (
-    sample_id, sample_first_name, sample_last_name, sample_nickname, sample_email, sample_phone, sample_password,
-    sample_country, sample_city, sample_state, sample_street1, sample_zip
-)
-VALUES (
-    'k1m743hyun', 'Taehyun', 'Kim', 'k1m', 'k1m743hyun@example.com', '010-1234-5678',
-    '$2a$10$0Cir0Qud/FmDTCJhZAmf3ewQnTpGrtZgky2mOgl43XYIwIDlNjzGC',
-    'South Korea', 'Seoul', 'Seoul', '123 Gangnam-daero', '06000'
-);
+-- Boilerplate sample data
+-- 각 서비스에서 common 라이브러리를 의존할 때 classpath 충돌 방지를 위해
+-- 실제 INSERT는 각 서비스의 data.sql에서 처리
+SELECT 1;
