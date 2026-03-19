@@ -200,6 +200,22 @@ public enum ErrorCode {
      */
     INVALID_SHARE_PERMISSION("SHARE-806", "잘못된 공유 권한 값입니다", HttpStatus.BAD_REQUEST),
 
+    // ==================== 초대/멤버 관련 에러 (MEMBER-901 ~ 999) ====================
+
+    FORBIDDEN("MEMBER-901", "권한이 없습니다", HttpStatus.FORBIDDEN),
+    INVITATION_NOT_FOUND("MEMBER-902", "초대를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
+    INVITATION_ALREADY_EXISTS("MEMBER-903", "이미 대기 중인 초대가 있습니다", HttpStatus.CONFLICT),
+    INVITATION_EXPIRED("MEMBER-904", "만료된 초대입니다", HttpStatus.BAD_REQUEST),
+    INVALID_INVITATION_STATUS("MEMBER-905", "유효하지 않은 초대 상태입니다", HttpStatus.BAD_REQUEST),
+    INVALID_INVITATION_RECIPIENT("MEMBER-906", "초대 대상이 일치하지 않습니다", HttpStatus.FORBIDDEN),
+    USER_ALREADY_MEMBER("MEMBER-907", "이미 가계부 멤버입니다", HttpStatus.CONFLICT),
+    MEMBER_NOT_FOUND("MEMBER-908", "멤버를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
+    INVALID_ROLE("MEMBER-909", "유효하지 않은 역할입니다", HttpStatus.BAD_REQUEST),
+    CANNOT_CHANGE_OWN_ROLE("MEMBER-910", "자신의 역할은 변경할 수 없습니다", HttpStatus.BAD_REQUEST),
+    CANNOT_CHANGE_OWNER_ROLE("MEMBER-911", "소유자의 역할은 변경할 수 없습니다", HttpStatus.BAD_REQUEST),
+    CANNOT_REMOVE_OWNER("MEMBER-912", "소유자는 제거할 수 없습니다", HttpStatus.BAD_REQUEST),
+    OWNER_CANNOT_LEAVE("MEMBER-913", "소유자는 가계부를 떠날 수 없습니다. 소유권을 이전하세요.", HttpStatus.BAD_REQUEST),
+
     // ==================== 거래 관련 에러 (TRANSACTION-301 ~ 399) ====================
 
     /**
