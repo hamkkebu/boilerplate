@@ -22,6 +22,7 @@ public class LedgerShareCreatedEvent extends BaseEvent {
     private Long ownerId;
     private Long sharedUserId;
     private String permission;
+    private String status;
 
     @Override
     public String getResourceId() {
@@ -30,12 +31,13 @@ public class LedgerShareCreatedEvent extends BaseEvent {
 
     @Builder
     public LedgerShareCreatedEvent(Long ledgerShareId, Long ledgerId, Long ownerId,
-                                    Long sharedUserId, String permission) {
+                                    Long sharedUserId, String permission, String status) {
         super(EVENT_TYPE, String.valueOf(ledgerShareId), String.valueOf(ownerId));
         this.ledgerShareId = ledgerShareId;
         this.ledgerId = ledgerId;
         this.ownerId = ownerId;
         this.sharedUserId = sharedUserId;
         this.permission = permission;
+        this.status = status;
     }
 }
