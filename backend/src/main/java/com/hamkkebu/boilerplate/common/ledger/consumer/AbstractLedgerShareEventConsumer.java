@@ -121,8 +121,21 @@ public abstract class AbstractLedgerShareEventConsumer<T extends SyncedLedgerSha
                 ledgerShareId, ledgerId, sharedUserId);
 
         // 이미 존재하는 공유인지 확인
-        if (ledgerShareRepository.findById(ledgerShareId).isPresent()) {
-            log.info("[Kafka Consumer] Ledger share already exists (idempotent skip): shareId={}", ledgerShareId);
+        var existing = ledgerShareRepository.findById(ledgerShareId);
+        if (existing.isPresent()) {
+            T share = existing.get();
+            if (share.isDeleted()) {
+                // soft-deleted 상태면 복원
+                share.restore();
+                ShareStatus status = extractStatus(eventData);
+                SharePermission permission = extractPermission(eventData);
+                share.updateFromEvent(status, permission, LocalDateTime.now());
+                ledgerShareRepository.save(share);
+                log.info("[Kafka Consumer] Ledger share restored: shareId={}, ledgerId={}, sharedUserId={}",
+                        ledgerShareId, ledgerId, sharedUserId);
+            } else {
+                log.info("[Kafka Consumer] Ledger share already exists (idempotent skip): shareId={}", ledgerShareId);
+            }
             return;
         }
 
