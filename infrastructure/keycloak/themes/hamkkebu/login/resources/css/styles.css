@@ -4,8 +4,8 @@
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 
 :root {
-  --color-primary: #4a90d9;
-  --color-primary-dark: #357abd;
+  --color-primary: #7c3aed;
+  --color-primary-dark: #6d28d9;
   --color-bg: #f5f7fa;
   --color-white: #ffffff;
   --color-text: #333333;
@@ -14,8 +14,8 @@
   --color-border: #e1e5eb;
   --color-input-bg: #ffffff;
   --color-input-border: #e1e5eb;
-  --gradient-primary: linear-gradient(135deg, #4a90d9 0%, #357abd 100%);
-  --gradient-brand: linear-gradient(135deg, #4a90d9 0%, #357abd 100%);
+  --gradient-primary: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  --gradient-brand: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
   --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
 }
 
@@ -41,7 +41,7 @@ body::before {
   right: -10%;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(74, 144, 217, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.08) 0%, transparent 70%);
   border-radius: 50%;
   filter: blur(80px);
   animation: pulse 8s ease-in-out infinite;
@@ -56,7 +56,7 @@ body::after {
   left: -5%;
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(53, 122, 189, 0.06) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(109, 40, 217, 0.06) 0%, transparent 70%);
   border-radius: 50%;
   filter: blur(80px);
   animation: pulse 10s ease-in-out infinite reverse;
@@ -144,7 +144,7 @@ body::after {
   background: var(--gradient-brand);
   border-radius: 12px;
   margin: 0 auto 28px;
-  box-shadow: 0 4px 12px rgba(74, 144, 217, 0.25);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
   order: -1;
 }
 
@@ -273,7 +273,7 @@ input#username:focus,
 input#password:focus {
   border-color: var(--color-primary) !important;
   background: var(--color-white) !important;
-  box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.12) !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12) !important;
 }
 
 /* Input Hover */
@@ -381,7 +381,7 @@ button[type="submit"] {
   font-weight: 600 !important;
   cursor: pointer !important;
   transition: all 0.2s ease !important;
-  box-shadow: 0 2px 8px rgba(74, 144, 217, 0.25) !important;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25) !important;
   text-transform: none !important;
   letter-spacing: 0 !important;
   display: block !important;
@@ -393,7 +393,7 @@ button[type="submit"] {
 #kc-form-buttons input[type="submit"]:hover,
 .btn-primary:hover {
   transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(74, 144, 217, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35) !important;
 }
 
 #kc-login:active,
@@ -702,7 +702,7 @@ html:hover ::-webkit-scrollbar-thumb:hover {
 }
 
 ::selection {
-  background: rgba(74, 144, 217, 0.2);
+  background: rgba(124, 58, 237, 0.2);
   color: var(--color-text);
 }
 
